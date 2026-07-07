@@ -1,0 +1,583 @@
+// This config is in the KDL format: https://kdl.dev
+// "/-" comments out the following node.
+// Check the wiki for a full description of the configuration:
+// https://github.com/YaLTeR/niri/wiki/Configuration:-Introduction
+config-notification {
+    disable-failed
+}
+
+
+
+
+// ##### Autostart #####
+spawn-at-startup "zen-browser"
+spawn-at-startup "steam"
+spawn-at-startup "org.telegram.desktop"
+spawn-at-startup "discord"
+spawn-at-startup "spotify"
+spawn-sh-at-startup "vicinae server"
+spawn-sh-at-startup "killall AmneziaVPN 2>/dev/null; sleep 1 && env QT_QPA_PLATFORM=xcb AmneziaVPN &"
+spawn-at-startup "polkit-gnome"
+
+
+// === use dms ===
+//spawn-at-startup "dms" "run"
+
+
+// === use random shit ===
+spawn-at-startup "awww-daemon" "--namespace" "backdrop"
+spawn-at-startup "~/.config/niri/scripts/restart-eww.sh"
+
+// = my scripts =
+
+
+
+// ##### Monitors #####
+// Gigabyte
+output "DP-1" {
+    mode "2560x1440@143.972"
+    position x=0 y=0
+    
+    focus-at-startup
+}
+
+// Asus
+output "DP-2" {
+    mode "2560x1440@74.925"
+    position x=-1440 y=0
+}
+
+
+
+
+
+// ##### Input #####
+gestures {
+    hot-corners {
+        off
+    }
+}
+
+input {
+    keyboard {
+        xkb {
+            layout "us,ru"
+            variant ","
+            options "grp:caps_toggle"
+        }
+        track-layout "global"
+        numlock
+    }
+
+    mouse {
+        accel-speed 0.2
+    }
+    focus-follows-mouse max-scroll-amount="10%"
+
+    tablet {
+        map-to-output "DP-1"
+    }
+}
+
+
+
+
+
+// ##### Visuals #####
+
+cursor {
+    xcursor-theme "Bibata-Modern-Ice"
+
+}
+
+// blur
+blur {
+    //off
+
+    passes 1
+    offset 3
+    noise 0
+    saturation 1
+}
+
+window-rule {
+    match app-id="Alacritty"
+    
+
+    background-effect {
+        blur true
+        xray false
+    }
+
+    opacity 0.85
+}
+
+window-rule {
+    match app-id="Spotify"
+    match app-id="org.gnome.Nautilus"
+
+    background-effect {
+        blur true
+        xray false
+    }
+
+    popups {
+        background-effect {
+            blur true
+            xray false
+        }
+    }
+
+    opacity 0.95
+}
+
+
+layer-rule {
+    match namespace="vicinae"
+
+    background-effect {
+        blur true
+        xray false
+    }
+
+    opacity 0.85
+    
+}
+
+
+
+layout {
+    gaps 5
+    background-color "transparent"
+    center-focused-column "never"
+    preset-column-widths {
+        proportion 0.33333
+        proportion 0.5
+        proportion 0.66667
+    }
+    focus-ring {
+        width 2
+        active-color   "#a7a7a7"
+        inactive-color "#505050"
+    }
+    shadow {
+        softness 30
+        spread 5
+        offset x=0 y=5
+        color "#0007"
+    }
+    struts {
+    }
+}
+layer-rule {
+    match namespace="^quickshell$"
+    place-within-backdrop true
+}
+layer-rule {
+    match namespace="^awww-daemonbackdrop$"
+    place-within-backdrop true
+}
+overview {
+    workspace-shadow {
+        off
+    }
+}
+
+environment {
+  XDG_CURRENT_DESKTOP "niri"
+  QT_QPA_PLATFORM "wayland"
+  ELECTRON_OZONE_PLATFORM_HINT "auto"
+  QT_QPA_PLATFORMTHEME "gtk3"
+  QT_QPA_PLATFORMTHEME_QT6 "gtk3"
+  TERMINAL "alacritty"
+  XCURSOR_THEME "Bibata-Modern-Ice"
+  XCURSOR_SIZE "24"
+}
+hotkey-overlay {
+    skip-at-startup
+}
+prefer-no-csd
+screenshot-path "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
+animations {
+    workspace-switch {
+        spring damping-ratio=0.80 stiffness=523 epsilon=0.0001
+    }
+    window-open {
+        duration-ms 150
+        curve "ease-out-expo"
+    }
+    window-close {
+        duration-ms 150
+        curve "ease-out-quad"
+    }
+    horizontal-view-movement {
+        spring damping-ratio=0.85 stiffness=423 epsilon=0.0001
+    }
+    window-movement {
+        spring damping-ratio=0.75 stiffness=323 epsilon=0.0001
+    }
+    window-resize {
+        spring damping-ratio=0.85 stiffness=423 epsilon=0.0001
+    }
+    config-notification-open-close {
+        spring damping-ratio=0.65 stiffness=923 epsilon=0.001
+    }
+    screenshot-ui-open {
+        duration-ms 200
+        curve "ease-out-quad"
+    }
+    overview-open-close {
+        spring damping-ratio=0.85 stiffness=800 epsilon=0.0001
+    }
+}
+
+
+
+
+
+// ##### Named Workspaces #####
+workspace "Work" {
+    open-on-output "DP-1"
+}
+workspace "Internet" {
+    open-on-output "DP-1"
+}
+workspace "Chats" {
+    open-on-output "DP-1"
+}
+workspace "Autism" {
+    open-on-output "DP-1"
+}
+
+
+
+
+
+// ##### Window Rules #####
+window-rule {
+    match app-id=r#"^org\.gnome\."#
+    draw-border-with-background false
+    geometry-corner-radius 12
+    clip-to-geometry true
+}
+window-rule {
+    match app-id=r#"^gnome-control-center$"#
+    match app-id=r#"^pavucontrol$"#
+    match app-id=r#"^nm-connection-editor$"#
+    default-column-width { proportion 0.5; }
+    open-floating false
+}
+
+
+// === Open Games ===
+window-rule {
+    match app-id="steam_app_*"
+
+    open-fullscreen true
+    open-on-output "DP-1"
+    open-on-workspace "Autism"
+}
+
+
+// === Workspaces ===
+window-rule {
+    match app-id="steam"
+    match app-id="net.lutris.Lutris"
+
+    open-on-workspace "Autism"
+}
+
+window-rule {
+    match app-id="org.telegram.desktop"
+    match app-id="discord"
+
+    open-on-workspace "Chats"
+}
+
+window-rule {
+    match app-id="zen"
+    match app-id="Spotify"
+    match app-id="AmneziaVPN"
+
+    exclude title="Picture-in-Picture"
+
+    open-on-workspace "Internet"
+}
+
+window-rule {
+    match app-id="unityhub"
+    match app-id="Unity"
+    match app-id="blender|Blender"
+    match app-id="codium"
+    match app-id="BambuStudio"
+    match app-id="FreeCAD"
+    match app-id="affinity.exe"
+    match app-id="org.godotengine.ProjectManager"
+    match app-id="jetbrains-rider"
+
+    open-on-workspace "Work"
+}
+
+
+// === Open Maximized ===
+window-rule {
+    exclude app-id="Alacritty"
+
+    exclude app-id="org.gnome.Nautilus"
+    exclude app-id="org.gnome.Nautilus"
+
+//    exclude app-id="steam" title="Friends List|Steam Settings"
+
+    open-maximized true
+}
+
+
+// === Open Floating ===
+window-rule {
+    match app-id="steam"
+    match app-id="Flameshot"
+    match title="Picture-in-Picture"
+    match app-id="org.quickshell"
+    exclude app-id="steam" title="Steam"
+
+    open-floating true
+}
+
+
+// === Misc ===
+window-rule {
+    match at-startup=false
+    exclude app-id="steam"
+
+    open-focused true
+}
+
+window-rule {
+    match app-id="Alacritty"
+    match app-id="zen"
+    match app-id="com.mitchellh.ghostty"
+    match app-id="kitty"
+    draw-border-with-background false
+}
+window-rule {
+    match app-id=r#"firefox$"# title="^Picture-in-Picture$"
+    match app-id="zoom"
+    open-floating true
+}
+window-rule {
+    geometry-corner-radius 12
+    clip-to-geometry true
+}
+
+
+
+
+
+// ##### Shortcuts #####
+binds {
+
+    // === System & Overview ===
+    Mod+Tab repeat=false { spawn "niri" "msg" "action" "toggle-overview"; }
+    Mod+Shift+Slash { show-hotkey-overlay; }
+
+
+    // === Application Launchers ===
+    Mod+Return repeat=false hotkey-overlay-title="Open Terminal" { spawn "alacritty"; }
+    Mod+B repeat=false { spawn "zen-browser"; }
+    Mod+E repeat=false { spawn "nautilus"; }
+    Mod+M repeat=false { spawn "spotify-launcher"; }
+
+
+    // === Vicinae ===
+    Alt+Space repeat=false { spawn "vicinae" "toggle"; }
+    Mod+V repeat=false { spawn "vicinae" "vicinae://launch/clipboard/history"; }
+
+
+
+    // DMS Utils
+    Ctrl+Shift+Escape hotkey-overlay-title="Task Manager" {
+        spawn "dms" "ipc" "call" "processlist" "toggle";
+    }
+
+
+    // === Security ===
+    Mod+L hotkey-overlay-title="Lock Screen" {
+        spawn "dms" "ipc" "call" "lock" "lock";
+    }
+    Mod+Shift+Q { quit; }
+
+    // === Audio Controls ===
+    XF86AudioRaiseVolume allow-when-locked=true {
+        spawn "dms" "ipc" "call" "audio" "increment" "5";
+    }
+    XF86AudioLowerVolume allow-when-locked=true {
+        spawn "dms" "ipc" "call" "audio" "decrement" "5";
+    }
+    XF86AudioMute allow-when-locked=true {
+        spawn "dms" "ipc" "call" "audio" "mute";
+    }
+    XF86AudioMicMute allow-when-locked=true {
+        spawn "dms" "ipc" "call" "audio" "micmute";
+    }
+
+
+    // === Window Management ===
+    Alt+Q repeat=false { close-window; }
+    Mod+Q repeat=false { close-window; }
+
+    Mod+F { maximize-column; }
+    Mod+Shift+F { fullscreen-window; }
+    //Mod+Alt+F { maximize-window-to-edges; }
+    
+    Mod+T { spawn "~/.config/niri/scripts/toggle-float.sh";  }
+    Mod+Shift+T { switch-focus-between-floating-and-tiling; }
+
+
+    // === Focus Navigation ===
+    Mod+A  { focus-column-left; }
+    Mod+S  { focus-window-or-workspace-down; }
+    Mod+W    { focus-window-or-workspace-up; }
+    Mod+D { focus-column-right; }
+
+    Mod+Left  { focus-column-left; }
+    Mod+Down  { focus-window-or-workspace-down; }
+    Mod+Up    { focus-window-or-workspace-up; }
+    Mod+Right { focus-column-right; }
+
+
+    // === Window Movement ===
+    Mod+Shift+A  { move-column-left; }
+    //Mod+Shift+S  { move-window-down; }
+    //Mod+Shift+W    { move-window-up; }
+    Mod+Shift+D { move-column-right; }
+
+    Mod+Shift+Left  { move-column-left; }
+    Mod+Shift+Down  { move-window-down; }
+    Mod+Shift+Up    { move-window-up; }
+    Mod+Shift+Right { move-column-right; }
+
+
+    // === Column Navigation ===
+    Mod+Z { focus-column-first; }
+    Mod+X { focus-column-last; }
+    Mod+Home { focus-column-first; }
+    Mod+End  { focus-column-last; }
+
+    Mod+Shift+Z { move-column-to-first; }
+    Mod+Shift+X  { move-column-to-last; }
+    Mod+Shift+Home { move-column-to-first; }
+    Mod+Shift+End  { move-column-to-last; }
+
+
+    // === Monitor Navigation ===
+    Mod+Ctrl+A  { focus-monitor-left; }
+    Mod+Ctrl+D { focus-monitor-right; }
+
+    Mod+Ctrl+Left  { focus-monitor-left; }
+    Mod+Ctrl+Right { focus-monitor-right; }
+
+
+    // === Move to Monitor ===
+    Mod+Shift+Ctrl+A  { move-column-to-monitor-left; }
+    Mod+Shift+Ctrl+D { move-column-to-monitor-right; }
+
+    Mod+Shift+Ctrl+Left  { move-column-to-monitor-left; }
+    Mod+Shift+Ctrl+Right { move-column-to-monitor-right; }
+
+
+    // === Workspace Navigation ===
+    Mod+Ctrl+S      { focus-workspace-down; }
+    Mod+Ctrl+W       { focus-workspace-up; }
+    Mod+Ctrl+Down      { focus-workspace-down; }
+    Mod+Ctrl+Up        { focus-workspace-up; }
+
+    Mod+Shift+Ctrl+S { move-column-to-workspace-down; }
+    Mod+Shift+Ctrl+W   { move-column-to-workspace-up; }
+    Mod+Shift+Ctrl+Down { move-column-to-workspace-down; }
+    Mod+Shift+Ctrl+Up   { move-column-to-workspace-up; }
+
+
+    // === Move Workspaces ===
+    Mod+Shift+Page_Down { move-workspace-down; }
+    Mod+Shift+Page_Up   { move-workspace-up; }
+    
+
+    // === Mouse Wheel Navigation ===
+    Mod+WheelScrollDown      cooldown-ms=100 { focus-workspace-down; }
+    Mod+WheelScrollUp        cooldown-ms=100 { focus-workspace-up; }
+
+    Mod+Shift+WheelScrollDown cooldown-ms=150 { move-column-to-workspace-down; }
+    Mod+Shift+WheelScrollUp   cooldown-ms=150 { move-column-to-workspace-up; }
+
+
+    Mod+MouseForward          { focus-column-right; }
+    Mod+MouseBack             { focus-column-left; }
+
+    Mod+Shift+MouseForward     { move-column-right; }
+    Mod+Shift+MouseBack        { move-column-left; }
+
+    Mod+Ctrl+MouseBack { move-column-to-monitor-left; }
+    Mod+Ctrl+MouseForward { move-column-to-monitor-right; }
+
+    
+    Mod+Ctrl+Shift+WheelScrollDown { move-column-right; }
+    Mod+Ctrl+Shift+WheelScrollUp   { move-column-left; }
+
+    // === Numbered Workspaces ===
+    Mod+1 { focus-workspace 1; }
+    Mod+2 { focus-workspace 2; }
+    Mod+3 { focus-workspace 3; }
+    Mod+4 { focus-workspace 4; }
+    Mod+5 { focus-workspace 5; }
+    Mod+6 { focus-workspace 6; }
+    Mod+7 { focus-workspace 7; }
+    Mod+8 { focus-workspace 8; }
+    Mod+9 { focus-workspace 9; }
+
+    // === Move to Numbered Workspaces ===
+    Mod+Shift+1 { move-column-to-workspace 1; }
+    Mod+Shift+2 { move-column-to-workspace 2; }
+    Mod+Shift+3 { move-column-to-workspace 3; }
+    Mod+Shift+4 { move-column-to-workspace 4; }
+    Mod+Shift+5 { move-column-to-workspace 5; }
+    Mod+Shift+6 { move-column-to-workspace 6; }
+    Mod+Shift+7 { move-column-to-workspace 7; }
+    Mod+Shift+8 { move-column-to-workspace 8; }
+    Mod+Shift+9 { move-column-to-workspace 9; }
+
+    // === Column Management ===
+    Mod+BracketLeft  { consume-or-expel-window-left; }
+    Mod+BracketRight { consume-or-expel-window-right; }
+    Mod+Period { expel-window-from-column; }
+
+    // === Sizing & Layout ===
+    Mod+R { switch-preset-column-width; }
+    Mod+Shift+R { switch-preset-window-height; }
+    Mod+Ctrl+R { reset-window-height; }
+    Mod+Ctrl+F { expand-column-to-available-width; }
+    Mod+C { center-column; }
+    Mod+Ctrl+C { center-visible-columns; }
+
+    // === Manual Sizing ===
+    Mod+Minus { set-column-width "-10%"; }
+    Mod+Equal { set-column-width "+10%"; }
+    Mod+Shift+Minus { set-window-height "-10%"; }
+    Mod+Shift+Equal { set-window-height "+10%"; }
+
+
+    // === Screenshots ===
+    XF86Launch1 { screenshot; }
+    Ctrl+XF86Launch1 { screenshot-screen; }
+    Alt+XF86Launch1 { screenshot-window; }
+
+    Mod+Shift+S { screenshot; }
+    Print { screenshot; }
+    Ctrl+Print { screenshot-screen; }
+    Alt+Print { screenshot-window; }
+    // === System Controls ===
+    Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; }
+    Mod+Shift+P { power-off-monitors; }
+}
+debug {
+    honor-xdg-activation-with-invalid-serial
+}

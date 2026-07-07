@@ -1,0 +1,15 @@
+/*
+
+!/.gitignore
+!/README.md
+!/niri
+!/fastfetch
+!/alacritty
+!/fish
+!/eww
+!/prepare_system_for_dotfiles.sh
+
+eww/scripts/*/target/
+**/.claude/
+**/*dms*/
+**/*dms*

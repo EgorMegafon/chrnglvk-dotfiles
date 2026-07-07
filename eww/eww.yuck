@@ -1,0 +1,192 @@
+(defvar icons '{
+    "play":     "\\ue037",
+    "pause":    "\\ue034",
+    "previous": "\\ue045",
+    "next":     "\\ue044"
+}')
+
+
+(defwindow bar [screen] :class "bar"
+           :geometry (geometry :x "0%"
+                               :y "0%"
+                               :width "100%"
+                               :height "30px"
+                               :anchor "top center")
+           :stacking "fg"
+           :exclusive true
+           :focusable "none"
+           :windowtype "toolbar"
+           :wm-ignore false
+    (centerbox
+        (box :halign "start" :space-evenly false
+            (multibutton)
+            (keyboard)
+            )
+        (box :halign "center"
+            (clock)
+            )
+        (box :halign "end"
+            (all-media-listener :visible false)
+            (media-widget :screen screen)
+        )
+    )
+)
+
+
+(defwidget multibutton []
+    (button :class "multi-button"
+            :onclick "vicinae toggle"
+            :onrightclick "niri msg action toggle-overview"
+            "󰀻"
+    )
+)
+
+(deflisten lang :initial "en"
+    "~/.config/eww/scripts/layout-watcher/target/release/layout-watcher")
+(defwidget keyboard []
+    (button :class "keyboard"
+            :onclick "niri msg action switch-layout next"
+            lang
+    )
+)
+
+(defwidget clock []
+    (eventbox  :class "clock"
+               :onscroll "~/.config/eww/scripts/vertical-scroll.sh {}"
+               :onrightclick "niri msg action toggle-overview"
+               (label :text {formattime(EWW_TIME, "%e %B %H:%M")})
+    )
+)
+
+
+(deflisten active_media :initial '{"title": "nothing...", "artists": "", "player": "Spotify", "status": "playing"}'
+    "~/.config/eww/scripts/media-watcher/target/release/media-watcher")
+(defwidget media-widget [screen]
+    (box
+        (box    :class "media-widget-controls-container"
+                (button     :class "media-button"
+                            :onclick "playerctl --player ${active_media.player} previous"
+                            {icons.previous}
+                )
+                (button     :class "media-button"
+                            :onclick "playerctl --player ${active_media.player} play-pause"
+                            (label :text    "${active_media.status == 'playing' 
+                                            ? '${icons.pause}' 
+                                            : '${icons.play}'}")
+                )
+                (button     :class "media-button"
+                            :onclick "playerctl --player ${active_media.player} next"
+                            {icons.next}
+                )
+        )
+        (eventbox   :class "media-widget"                    
+                    :onscroll "~/.config/eww/scripts/media-control.sh {} ${active_media.player}"
+                    :onclick "~/.config/eww/scripts/menus-manager.sh open-menu media-menu ${screen}"
+                    :onrightclick "pkill -USR1 -f 'eww/scripts/media-watcher/target/release/media-watcher'"
+                    :onmiddleclick "pkill -USR1 -f 'eww/scripts/media-watcher/target/release/media-watcher'"
+                    (label :text "${active_media.title} - ${active_media.artists}")
+        )
+    )
+)
+
+(deflisten all_media :initial "[]"
+    "~/.config/eww/scripts/media-menu/target/release/media-menu")
+(defwidget all-media-listener [] 
+    (label :visible false :text all_media)
+)
+(defwindow media-menu [screen]
+            :screen screen
+            :geometry (geometry :anchor "top right"
+                                    :x "10px"
+                                    :y "0"
+                                :width "600px"
+                                :height "200px")
+            :stacking "overlay"
+            :exclusive false
+            :focusable "none"
+        (media-menu-content)
+)
+(defwidget media-menu-content []
+    (box :orientation "v" :space-evenly false :spacing 8
+        (for player in {jq(all_media, "sort_by(.player != \"" + active_media.player + "\")" )}
+            (box
+                (active-card :player player :visible {player.player == active_media.player})
+                (player-card :player player :visible {player.player != active_media.player})
+            )
+        )
+    )
+)
+
+(defwidget active-card [player visible]
+    (box    :class "media-entry" 
+            :orientation "h"
+            :visible visible
+            (label :text "art")
+            (box    :class "active-media-info-container"
+                    :orientation "v"
+                    (scale  :class "active-media-progress"
+                            :value {player.progress / 1000000}
+                            :min 0
+                            :max {player.duration > 0 ? player.duration / 1000000 : 1}
+                            :active {player.can_progress}
+                    )
+                    (box    :class "active-media-controls"
+                            :orientation "h"
+                            (scale  :class "active-media-volume"
+                                    :value {player.volume}
+                                    :round-digits 2
+                                    :min 0
+                                    :max 1
+                                    :active {player.can_volume}
+                            )
+                            (box    :class "active-media-buttons-container"
+                                    :orientation "h"
+                                    (button :class "media-button"
+                                            :active {player.can_previous}
+                                            :onclick "playerctl --player ${player.player} previous"
+                                            "\\ue045"
+                                    )
+                                    (button :class "media-button"
+                                            :active {player.can_pause}
+                                            :onclick "playerctl --player ${player.player} play-pause"
+                                            {player.playing ? "" : ""}
+                                    )
+                                    (button :class "media-button"
+                                            :active {player.can_next}
+                                            :onclick "playerctl --player ${player.player} next"
+                                            "󰙢"
+                                    )
+                                    (button :class "media-button"
+                                            :active {player.can_loop}
+                                            :onclick    "playerctl --player ${player.player} loop ${
+                                                        player.loop_status == 'none' ? 'Track' :
+                                                        player.loop_status == 'track' ? 'Playlist' : 'None'};
+                                                        pkill -USR1 -f 'target/release/media-menu'"
+                                                {player.loop_status == 'track'    ? '\\ue041' :
+                                                player.loop_status == 'playlist' ? '\\ue040' : '󰑗'}
+                                    )
+                                    (button :class "media-button"
+                                            :active {player.can_shuffle}
+                                            :onclick    "playerctl --player ${player.player} shuffle toggle;
+                                                        pkill -USR1 -f 'target/release/media-menu'"
+                                                {player.shuffle ? "" : ""}
+                                    )
+                            )
+                    )
+            )
+    )
+)
+(defwidget player-card [player visible]
+    (box :class "media-entry" :visible visible
+        (label :text "background ${player.title}")
+    )
+)
+
+(defwindow deactivation-area :class "deactivation-area"
+            :geometry (geometry :width "100%"
+                                :height "100%")
+            :stacking "fg"
+            :exclusive false
+            :focusable "none"
+        (eventbox :onclick "~/.config/eww/scripts/menus-manager.sh close-menus")
+)
