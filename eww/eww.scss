@@ -1,7 +1,63 @@
-.media-button {
-    font-family: "Material Symbols Rounded Filled";
+.bar {
+    border-radius: 15px
 }
 
+
+.media-button {
+    font-family: "Material Symbols Rounded Filled";
+    font-weight: 800;
+}
+.media-button.inactive {
+    font-weight: 400;
+}
+.media-button.impossible {
+    font-family: "Material Symbols Rounded";
+    font-weight: 200;
+}
+
+.media-menu {
+    background-color: transparent;
+}
 .deactivation-area {
     background-color: transparent;
+}
+
+.transparent {
+    background-color: transparent;
+}
+.test {
+    background-color: green;
+}
+
+.media-entry-container {
+    padding-top: 10px;
+}
+.media-entry {
+    border-radius: 20px;
+    background-color: white;
+}
+
+.media-entry.active {
+    min-height: 300px;
+}
+
+.active-media-art {
+    min-width: 230px;
+    min-height: 230px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: 50%;
+}
+.vinyl-bg {
+    min-width: 250px;
+    min-height: 250px;
+    background-color: gray;
+    border-radius: 10%;
+}
+.vinyl-fg {
+    min-width: 15px;
+    min-height: 15px; 
+    background-color: gray;
+    border-radius: 50%;
 }

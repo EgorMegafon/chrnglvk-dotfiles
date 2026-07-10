@@ -379,6 +379,7 @@ binds {
     // === System & Overview ===
     Mod+Tab repeat=false { spawn "niri" "msg" "action" "toggle-overview"; }
     Mod+Shift+Slash { show-hotkey-overlay; }
+    Ctrl+Space { switch-layout "next"; }
 
 
     // === Application Launchers ===

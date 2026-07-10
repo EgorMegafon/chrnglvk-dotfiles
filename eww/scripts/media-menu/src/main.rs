@@ -1,19 +1,28 @@
 use std::collections::HashMap;
 use std::sync::mpsc;
-use std::process::{Command, Stdio};
-use std::io::{BufReader, BufRead};
 use std::thread;
 use std::time::Duration;
+use dbus::message::MatchRule;
 use mpris::{LoopStatus, Metadata, PlaybackStatus, Player, PlayerFinder};
 use serde::Serialize;
-use signal_hook::consts::signal::{SIGUSR1, SIGUSR2};
-use signal_hook::iterator::Signals;
+use dbus::blocking::Connection;
+use std::process::Command;
+use std::io::{BufRead, BufReader, Read};
+use std::fs::OpenOptions;
+
+
 
 enum Signal {
     Event,
     Tick,
     EwwOpen,
     EwwClose,
+    ForceSoftRefrech,
+}
+
+enum WidgetStatus {
+        MenuOpened,
+        MenuClosed,
 }
 
 #[derive(Serialize)]
@@ -25,7 +34,7 @@ struct PlayerData {
     player: String,
     duration: u64,
 
-    // buttons
+    // controls
     shuffle: bool,
     loop_status: String,
     playing: bool,
@@ -41,12 +50,11 @@ struct PlayerData {
 
 
     // fast
-    volume: f64,
     progress: u64,
+    volume: f64,
 
 
     // utility
-    update_type: i8, // 0 - full, 1 - hard, 2 - soft
     #[serde(skip)]
     last_art_url: String,
 }
@@ -55,21 +63,28 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // === SIGNAL EMITTERS ===
     let (tx, rx) = mpsc::channel();
 
-    let tx_event = tx.clone();
-    let media_monitor = Command::new("playerctl")
-        .arg("--all-players")
-        .arg("--follow")
-        .arg("--format")
-        .arg("{{status}} {{title}} {{artist}}")
-        .arg("metadata")
-        .stdout(Stdio::piped())
-        .spawn()
-        .unwrap();
-    let event_stream = media_monitor.stdout.unwrap();
-    let event_reader = BufReader::new(event_stream);
+
+    let tx_bus_event = tx.clone();
+    let conn = Connection::new_session()?;
+    let mut conn_filter = MatchRule::new_signal(
+            "org.freedesktop.DBus.Properties",
+            "PropertiesChanged",
+        );
+    conn_filter.path = Some("/org/mpris/MediaPlayer2".into());
+
+    conn.add_match(conn_filter, move |args: (String, dbus::arg::PropMap, Vec<String>), _, _| {
+        let (_iface, changed, _inval) = args;
+        let only_volume = !changed.is_empty() && changed.keys().all(|k| k =="Volume");
+
+        if !only_volume {
+            let _ = tx_bus_event.send(Signal::Event);
+        }
+        true
+    })?;
+
     thread::spawn(move || {
-        for _line in event_reader.lines() {
-            tx_event.send(Signal::Event).unwrap();
+        loop {
+            conn.process(std::time::Duration::from_millis(1000)).ok();
         }
     });
 
@@ -81,34 +96,50 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
-    let tx_eww = tx.clone();
-    let mut signals = Signals::new(&[SIGUSR1, SIGUSR2])?;
+    let tx_user_event = tx.clone();
     thread::spawn(move || {
-        for signal in signals.forever() {
-            match signal {
-                SIGUSR1 => tx_eww.send(Signal::EwwOpen).unwrap(),
-                SIGUSR2 => tx_eww.send(Signal::EwwClose).unwrap(),
-                _ => {}
+        let path = "/tmp/eww-media-menu.fifo";
+        Command::new("mkfifo").arg(path).status().ok();
+
+        loop {
+            let file = match OpenOptions::new().read(true).open(path) {
+                Ok(f) => f,
+                _ => { 
+                    thread::sleep(Duration::from_millis(208));
+                    continue;
+                }
+            };
+            for line in BufReader::new(file).lines().flatten() {
+                let signal = match line.trim() {
+                    "open" => Signal::EwwOpen,
+                    "close" => Signal::EwwClose,
+                    "soft" => Signal::ForceSoftRefrech,
+                    "hard" => Signal::Event,
+                    _ => continue,
+                };
+                let _ = tx_user_event.send(signal);
             }
         }
     });
 
 
+
+    // === MAIN SHTUKA ===
     let mut cache: HashMap<String, PlayerData> = HashMap::new();
     let player_finder = PlayerFinder::new()?;
 
-    let mut menu_status = 0; // 0 - closed, 1 - opened
+    let mut menu_status = WidgetStatus::MenuClosed;
     for signal in rx {
         match signal {
             Signal::EwwOpen => {
-                menu_status = 1;
+                menu_status = WidgetStatus::MenuOpened;
             }
             Signal::EwwClose => {
-                menu_status = 0;
+                menu_status = WidgetStatus::MenuClosed;
                 continue;
             }
             Signal::Tick => {
-                if menu_status == 0 {
+                if matches!(menu_status, WidgetStatus::MenuClosed) {
                     continue;
                 }
             }
@@ -118,30 +149,31 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let players = player_finder.find_all().unwrap_or_default();
         let do_soft_pull = sync_players(&players, &mut cache);
         
-        let do_print = match signal {
+        match signal {
             Signal::Event => {
                 pull_hard(&players, &mut cache);
-                true
+                output_hard(&cache);
+                pull_soft(&players, &mut cache, true);
+                output_soft(&cache);
             }
             Signal::Tick => {
                 if do_soft_pull {
-                    pull_soft(&players, &mut cache);
-                    true
-                }
-                else {
-                    false
+                    pull_soft(&players, &mut cache, false);
+                    output_soft(&cache);
                 }
             }
             Signal::EwwOpen => {
                 pull_hard(&players, &mut cache);
-                true
+                output_hard(&cache);
+                pull_soft(&players, &mut cache, true);
+                output_soft(&cache);
             }
-            _ => false,
+            Signal::ForceSoftRefrech => {
+                pull_soft(&players, &mut cache, true);
+                output_soft(&cache);
+            }
+            _ => {}
         };
-
-        if do_print {
-            output_json(&cache);
-        }
     }
 
     Ok(())
@@ -188,7 +220,7 @@ fn pull_full(player: &Player) -> PlayerData {
                             Ok(LoopStatus::Playlist) => "playlist".to_string(),
                             _ => "none".to_string(),
                         },
-        playing:    match player.get_playback_status().unwrap() {
+        playing:    match player.get_playback_status().unwrap_or(PlaybackStatus::Paused) {
                             PlaybackStatus::Playing => true,
                             _ => false,
                         },
@@ -206,13 +238,11 @@ fn pull_full(player: &Player) -> PlayerData {
         volume: player.get_volume().unwrap_or(0.0),
         progress: player.get_position_in_microseconds().unwrap_or(0),
 
-
-        update_type: 0,
         last_art_url: metadata.art_url().unwrap_or("").to_string(),
     }
 }
 
-fn pull_hard(players: &[Player], cache: &mut HashMap<String, PlayerData> ) {
+fn pull_hard(players: &[Player], cache: &mut HashMap<String, PlayerData>) {
     for player in players {
         let id = player.bus_name_trimmed().to_string();
         let metadata = player.get_metadata().unwrap_or_default();
@@ -236,10 +266,15 @@ fn pull_hard(players: &[Player], cache: &mut HashMap<String, PlayerData> ) {
                                     Ok(LoopStatus::Playlist) => "playlist".to_string(),
                                     _ => "none".to_string(),
                                     };
-            entry.playing =     match player.get_playback_status().unwrap() {
-                                PlaybackStatus::Playing => true,
-                                _ => false,
-                                };
+            match player.get_playback_status().unwrap_or(PlaybackStatus::Paused) {
+                PlaybackStatus::Playing => {
+                    entry.playing = true;
+                }
+                _ => {
+                    entry.playing = false;
+                }
+            }
+            
 
             entry.can_next = player.can_go_next().unwrap_or(false);
             entry.can_previous = player.can_go_previous().unwrap_or(false);
@@ -249,29 +284,25 @@ fn pull_hard(players: &[Player], cache: &mut HashMap<String, PlayerData> ) {
             entry.can_volume = player.has_volume().unwrap_or(false);
             entry.can_progress = player.can_seek().unwrap_or(false);
                     
-            if new_art_url != entry.last_art_url {
+            if !new_art_url.is_empty() && new_art_url != entry.last_art_url {
                 entry.art = download_art(&new_art_url, &id).unwrap_or_default();
-                entry.last_art_url = new_art_url;
+                entry.last_art_url = new_art_url.to_string();
             }
-
-            entry.update_type = 1;
         }
     }
 }
 
-fn pull_soft(players: &[Player], cache: &mut HashMap<String, PlayerData> ) {
+fn pull_soft(players: &[Player], cache: &mut HashMap<String, PlayerData>, force: bool ) {
     for player in players {
         let id = player.bus_name_trimmed().to_string();
 
-        if !matches!(player.get_playback_status(), Ok(PlaybackStatus::Playing)) {
+        if !matches!(player.get_playback_status(), Ok(PlaybackStatus::Playing)) && !force {
             continue;
         }
 
         if let Some(entry) = cache.get_mut(&id) {
-            entry.volume = player.get_volume().unwrap_or(0.0);
             entry.progress = player.get_position_in_microseconds().unwrap_or(0);
-
-            entry.update_type = 2;
+            entry.volume = player.get_volume().unwrap_or(entry.volume);
         }
     }
 }
@@ -283,13 +314,23 @@ fn download_art(url: &str, player_id: &str) -> Option<String> {
 
     let path = format!("/tmp/eww-art-{}.jpg", player_id);
 
-    let file = reqwest::blocking::get(url).ok()?.bytes().ok()?;
-    std::fs::write(&path, file).ok()?;
+    let file = ureq::get(url).call();
+    let mut bytes = Vec::new();
+    match file {
+        Ok(f) => {
+            f.into_body().into_reader().read_to_end(&mut bytes).ok()?;
+        }
+        _ => { return None; }
+    }
+
+    std::fs::write(&path, bytes).ok()?;
 
     Some(path)
 }
 
-fn output_json(cache: &HashMap<String, PlayerData>) {
+
+
+fn output_hard(cache: &HashMap<String, PlayerData>) {
     fn priority(player_name: &str) -> u8 {
         return match player_name {
             "spotify" => 0,
@@ -301,4 +342,26 @@ fn output_json(cache: &HashMap<String, PlayerData>) {
     let mut cache_entries: Vec<&PlayerData> = cache.values().collect();
     cache_entries.sort_by_key(|entry| priority(&entry.player));
     println!("{}", serde_json::to_string(&cache_entries).unwrap());
+}
+
+#[derive(Serialize)]
+struct SoftOutput {
+    progress: u64, 
+    volume: f64,
+}
+
+fn output_soft(cache: &HashMap<String, PlayerData>) {
+    let output_values: HashMap<&str, SoftOutput> = cache.values()
+        .map(
+            |entry| (entry.player.as_str(), 
+            SoftOutput { progress: entry.progress, volume: entry.volume } )
+        ).collect();
+    let json = serde_json::to_string(&output_values).unwrap();
+
+    Command::new("eww")
+        .arg("update")
+        .arg(&format!("soft_all_media_updates={}", json))
+        .status()
+        .ok();
+
 }

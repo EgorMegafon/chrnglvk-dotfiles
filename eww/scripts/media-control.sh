@@ -1,21 +1,32 @@
 #!/usr/bin/env bash
 
-DIR="$1"
-PLAYER="$2"
-FORCE_PLAYER="$3"
+ACTION="$1"
+INPUT="$2"
+PLAYER="$3"
+FORCE_PLAYER="$4"
 
-change_symbol=""
-case "$DIR" in
-    up) change_symbol="+" ;;
-    down) change_symbol="-" ;;
+case "$ACTION" in
+    volume)
+        change_input=""
+        case "$INPUT" in
+            up) change_input="+" ;;
+            down) change_input="-" ;;
+            *) change_input=$(awk -v input=$INPUT 'BEGIN {print input / 100}') ;;
+        esac
+
+        if [[ "$FORCE_PLAYER" == "" ]]; then
+            if [[ "$PLAYER" == "spotify" ]]; then
+                playerctl --player spotify volume 0.05"$change_input"
+            else
+                wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%"$change_input"
+            fi
+        else
+            playerctl --player ${PLAYER} volume ${change_input}
+        fi
+    ;;
+    seek)
+        playerctl --player ${PLAYER} position ${INPUT}
+    ;;
 esac
 
-if [[ "$FORCE_PLAYER" == "" ]]; then
-    if [[ "$PLAYER" == "spotify" ]]; then
-        playerctl --player spotify volume 0.05"$change_symbol"
-    else
-        wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%"$change_symbol"
-    fi
-else
-    playerctl --player "$PLAYER" volume 0.05"$change_symbol"
-fi
+echo soft > /tmp/eww-media-menu.fifo

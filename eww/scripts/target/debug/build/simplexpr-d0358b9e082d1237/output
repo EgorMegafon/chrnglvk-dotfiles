@@ -1,0 +1,41 @@
+processing file `/home/liinad/.cargo/git/checkouts/eww-1cf80828f289a6b5/4ded063/crates/simplexpr/src/simplexpr_parser.lalrpop`
+Phase `Grammar validation` begun
+Phase `Grammar validation` completed in 0.000157749 seconds
+Phase `Grammar resolution` begun
+Phase `Grammar resolution` completed in 0.000035669 seconds
+Phase `Precedence expansion` begun
+Phase `Precedence expansion` completed in 0.000069165 seconds
+Phase `Macro expansion` begun
+Phase `Macro expansion` completed in 0.00014417 seconds
+Phase `Token check` begun
+Phase `Token check` completed in 0.000057803 seconds
+Phase `Infer types` begun
+Phase `Infer types` completed in 0.000155912 seconds
+Phase `Lowering` begun
+Phase `Lowering` completed in 0.000413959 seconds
+Phase `Inlining` begun
+Phase `Inlining` completed in 0.000350931 seconds
+Building states for public nonterminal `Expr`
+Phase `LR(1) state construction (lane)` begun
+Phase `LR(1) state construction (lane)` completed in 0.107704246 seconds
+Building states for public nonterminal `Expr0`
+Phase `LR(1) state construction (lane)` begun
+Phase `LR(1) state construction (lane)` completed in 0.100873785 seconds
+Building states for public nonterminal `Expr1`
+Phase `LR(1) state construction (lane)` begun
+Phase `LR(1) state construction (lane)` completed in 0.098187321 seconds
+Building states for public nonterminal `Expr2`
+Phase `LR(1) state construction (lane)` begun
+Phase `LR(1) state construction (lane)` completed in 0.09862428 seconds
+Building states for public nonterminal `Expr3`
+Phase `LR(1) state construction (lane)` begun
+Phase `LR(1) state construction (lane)` completed in 0.09906951 seconds
+Building states for public nonterminal `Expr4`
+Phase `LR(1) state construction (lane)` begun
+Phase `LR(1) state construction (lane)` completed in 0.099475484 seconds
+Building states for public nonterminal `Expr5`
+Phase `LR(1) state construction (lane)` begun
+Phase `LR(1) state construction (lane)` completed in 0.102419837 seconds
+Building states for public nonterminal `Expr6`
+Phase `LR(1) state construction (lane)` begun
+Phase `LR(1) state construction (lane)` completed in 0.104010655 seconds

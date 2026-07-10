@@ -1,0 +1,13 @@
+/home/liinad/.config/eww/scripts/target/debug/deps/yoke-7e2f9e7e3d4a0bf3.d: /home/liinad/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yoke-0.8.3/src/lib.rs /home/liinad/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yoke-0.8.3/src/cartable_ptr.rs /home/liinad/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yoke-0.8.3/src/either.rs /home/liinad/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yoke-0.8.3/src/kinda_sorta_dangling.rs /home/liinad/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yoke-0.8.3/src/macro_impls.rs /home/liinad/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yoke-0.8.3/src/utils.rs /home/liinad/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yoke-0.8.3/src/yoke.rs /home/liinad/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yoke-0.8.3/src/yokeable.rs /home/liinad/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yoke-0.8.3/src/zero_from.rs
+
+/home/liinad/.config/eww/scripts/target/debug/deps/libyoke-7e2f9e7e3d4a0bf3.rmeta: /home/liinad/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yoke-0.8.3/src/lib.rs /home/liinad/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yoke-0.8.3/src/cartable_ptr.rs /home/liinad/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yoke-0.8.3/src/either.rs /home/liinad/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yoke-0.8.3/src/kinda_sorta_dangling.rs /home/liinad/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yoke-0.8.3/src/macro_impls.rs /home/liinad/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yoke-0.8.3/src/utils.rs /home/liinad/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yoke-0.8.3/src/yoke.rs /home/liinad/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yoke-0.8.3/src/yokeable.rs /home/liinad/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yoke-0.8.3/src/zero_from.rs
+
+/home/liinad/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yoke-0.8.3/src/lib.rs:
+/home/liinad/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yoke-0.8.3/src/cartable_ptr.rs:
+/home/liinad/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yoke-0.8.3/src/either.rs:
+/home/liinad/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yoke-0.8.3/src/kinda_sorta_dangling.rs:
+/home/liinad/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yoke-0.8.3/src/macro_impls.rs:
+/home/liinad/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yoke-0.8.3/src/utils.rs:
+/home/liinad/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yoke-0.8.3/src/yoke.rs:
+/home/liinad/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yoke-0.8.3/src/yokeable.rs:
+/home/liinad/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yoke-0.8.3/src/zero_from.rs:

@@ -34,3 +34,5 @@ abbr -a ff fastfetch
 abbr -a ytd yt-dlp
 
 abbr -a pacman 'sudo pacman'
+
+abbr -a restarteww '~/.config/niri/scripts/restart-eww.sh'
