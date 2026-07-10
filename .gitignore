@@ -9,7 +9,7 @@
 !/eww
 !/prepare_system_for_dotfiles.sh
 
-eww/scripts/*/target/
+**/target/
 **/.claude/
 **/*dms*/
 **/*dms*
