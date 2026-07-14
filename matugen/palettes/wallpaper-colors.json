@@ -1,0 +1,8 @@
+{
+    "primary":      "#adc6ff",
+    "secondary":    "#bfc6dc",
+    "tertiary":     "#debcdf",
+    "error":        "#ffb4ab",
+    "surface":      "#111318",
+    "background":   "#111318"
+}

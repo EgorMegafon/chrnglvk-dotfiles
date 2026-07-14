@@ -2,10 +2,11 @@
 // "/-" comments out the following node.
 // Check the wiki for a full description of the configuration:
 // https://github.com/YaLTeR/niri/wiki/Configuration:-Introduction
+include "matugen.kdl"
+
 config-notification {
     disable-failed
 }
-
 
 
 
@@ -143,6 +144,18 @@ layer-rule {
     opacity 0.85
     
 }
+
+/-layer-rule {
+    match namespace="eww-menu"
+    background-effect {
+        blur true
+        xray false
+    }
+
+    opacity 0.5
+}
+
+
 
 
 
@@ -337,9 +350,10 @@ window-rule {
     match app-id="steam"
     match app-id="Flameshot"
     match title="Picture-in-Picture"
-    match app-id="org.quickshell"
     exclude app-id="steam" title="Steam"
+    match app-id="io.missioncenter.MissionCenter"
 
+    
     open-floating true
 }
 
@@ -361,7 +375,6 @@ window-rule {
 }
 window-rule {
     match app-id=r#"firefox$"# title="^Picture-in-Picture$"
-    match app-id="zoom"
     open-floating true
 }
 window-rule {

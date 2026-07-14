@@ -1,11 +1,19 @@
 (defvar icons '{
-    "play":     "\\ue037",
-    "pause":    "\\ue034",
-    "previous": "\\ue045",
-    "next":     "\\ue044",
-    "shuffle":  "\\ue043",
-    "loop":     "\\ue040",
-    "loop_one": "\\ue041"   
+    "menu":             "\\ue5c3",
+    "play":             "\\ue037",
+    "pause":            "\\ue034",
+    "previous":         "\\ue045",
+    "next":             "\\ue044",
+    "shuffle":          "\\ue043",
+    "loop":             "\\ue040",
+    "loop_one":         "\\ue041",
+    "cpu":              "\\ue322",
+    "ram":              "\\uf7a3",
+    "gpu":              "\\uef5b",
+    "volume_full":      "\\ue050",
+    "volume_half":      "\\ue04d",
+    "volume_mute":      "\\ue04e",
+    "volume_off":       "\\ue04f"
 }')
 
 
@@ -14,7 +22,7 @@
            :geometry (geometry :x "0%"
                                :y "0%"
                                :width "100%"
-                               :height "30px"
+                               :height "20px"
                                :anchor "top center")
            :stacking "fg"
            :exclusive true
@@ -24,24 +32,60 @@
     (centerbox
         (box :halign "start" :space-evenly false
             (multibutton)
+            (resource-monitor)
             (keyboard)
             )
         (box :halign "center"
             (clock)
         )
         (box :halign "end"
-            (all-media-listener :visible false)
+            (all-stuff-listener :visible false)
             (media-widget :screen screen)
         )
     )
 )
 
+(defwidget all-stuff-listener [] 
+    (label :visible false :text all_media)
+)
 
+(defvar reveal_resource_usage false)
 (defwidget multibutton []
-    (button :class "multi-button"
-            :onclick "vicinae toggle"
+    (button :class "menu-button"
+            :onclick "eww update reveal_resource_usage=${!reveal_resource_usage}"
             :onrightclick "niri msg action toggle-overview"
-            "󰀻"
+            (label :text "${icons.menu}" :class "icon")
+    )
+)
+
+(deflisten resource_usage :initial '{"cpu": "0.0", "ram": "0.0", "vram": "0.0"}'
+    "~/.config/eww/scripts/target/release/resource-watcher")
+(defwidget resource-monitor []
+    (revealer   :class "resource-monitor"
+                :reveal reveal_resource_usage
+                :transition "slideright"
+                
+                (box
+                    (box    :class "resource-item"
+                            :orientation "h"
+                            (label :text "${icons.cpu}" :class "icon")
+                            (label :text "${resource_usage.cpu}%")
+                    )
+                    (box    :class "resource-item"
+                            :orientation "h"
+                            (label :text "${icons.ram}" :class "icon")
+                            (label :text "${resource_usage.ram} GB")
+                    )
+                    (box    :class "resource-item"
+                            :orientation "h"
+                            (label :text "${icons.gpu}" :class "icon")
+                            (label :text "${resource_usage.vram} GB")
+                    )
+                    
+                    
+                    
+                )
+
     )
 )
 
@@ -58,16 +102,16 @@
     (eventbox  :class "clock"
                :onscroll "~/.config/eww/scripts/vertical-scroll.sh {}"
                :onrightclick "niri msg action toggle-overview"
-               (label :text {formattime(EWW_TIME, "%e %B %H:%M")})
+               (label :text {formattime(EWW_TIME, "%a, %e %B %H:%M")})
     )
 )
 
 
-(deflisten active_media :initial '{"title": "nothing...", "artists": "", "player": "Spotify", "status": "playing"}'
+(deflisten active_media :initial '{"title": "nothing...", "artists": "nobody...", "player": "Spotify", "status": "playing"}'
     "~/.config/eww/scripts/target/release/media-watcher")
 (defwidget media-widget [screen]
     (box
-        (box    :class "media-widget-controls-container"
+        (box    :class "media-buttons"
                 (button     :class "media-button"
                             :onclick "playerctl --player ${active_media.player} previous"
                             {icons.previous}
@@ -83,7 +127,7 @@
                             {icons.next}
                 )
         )
-        (eventbox   :class "media-widget"                    
+        (eventbox   :class "now-playing"
                     :onscroll "~/.config/eww/scripts/media-control.sh volume {} ${active_media.player}"
                     :onclick    "setsid -f ~/.config/eww/scripts/menus-manager.sh open-menu media-menu ${screen}"
                     :onrightclick "pkill -USR1 -f 'eww/scripts/target/release/media-watcher'"
@@ -95,17 +139,16 @@
 
 (deflisten all_media :initial "[]"
     "~/.config/eww/scripts/target/release/media-menu")
-(defwidget all-media-listener [] 
-    (label :visible false :text all_media)
-)
 (defvar soft_all_media_updates "{}")
 (defvar reveal_media_menu false)
 (defwindow media-menu [screen]
             :class "media-menu"
+            :namespace "eww-menu"
             :screen screen
             :geometry (geometry :anchor "top right"
                                     :x "10px"
-                                    :y "0")
+                                    :y "0"
+                                    :width "200px")
             :stacking "overlay"
             :exclusive false
             :focusable "none"
@@ -122,7 +165,7 @@
             :space-evenly false
         
         (for player in {jq(all_media, "sort_by(.player != \"" + active_media.player + "\")" )}
-            (box :class "media-entry-container"
+            (box :class "media-slot"
                 (active-card :player player :visible {player.player == active_media.player})
                 (player-card :player player :visible {player.player != active_media.player})
             )
@@ -141,113 +184,299 @@
 
 (defvar media_art_rotation 0)
 (defwidget active-card [player visible]
-    (box    :class "media-entry active" 
+    (box    :class "media-card active"
             :orientation "h"
             :visible visible
-            (overlay 
-                
-                (box    :class "vinyl-bg"
-                        :valign "center"
-                        :halign "center"
-                )
-                (transform  :transform-origin-x "50%"
-                            :transform-origin-y "50%"
-                            :rotate media_art_rotation
-                            
-                            (box    :class "active-media-art"
-                                    :valign "center"
-                                    :halign "center"
-                                    :style "background-image: url('${player.art == '' ? EWW_CONFIG_DIR + '/default-art.jpg' : player.art}');"
-                            )
-                )
-                (box    :class "vinyl-fg"
-                        :valign "center"
-                        :halign "center"
-                )
-            )
-            
-            
-            
-            (box    :class "active-media-info-container"
-                    :orientation "v"
-                    (box)
+            :space-evenly false
+            (box    :class "vinyl-container"
+                    :halign "start"
 
-                    (eventbox   :class "active-media-progress-container"
-                                :onhover    "echo soft > /tmp/eww-media-menu.fifo;
-                                            eww update \
-                                            player_changing_progress='${player.player}' \
-                                            changed_progress_value=${jq(soft_all_media_updates, '."' + player.player + '".progress? // 0') / 1000000} \
-                                            progress_hover_sign=$(date +%s%N)"
-                                :onhoverlost    "setsid -f ~/.config/eww/scripts/media-menu-slider-release.sh progress"
-                                (scale  :class "active-media-progress"
-                                        :value {jq(soft_all_media_updates, ".\"" + player.player + "\".progress? // 0") / 1000000}
-                                        :min 00
-                                        :max {player.duration > 0 ? player.duration / 1000000 : 1}
-                                        :active {player.can_progress}
-                                        :onchange   "eww update changed_progress_value={};
-                                                    ~/.config/eww/scripts/media-control.sh seek {} ${player.player} force"
+                    (overlay    :class "vinyl-container"
+                        :halign "start"
+                
+                    (box    :class "vinyl-bg"
+                            :valign "center"
+                            :halign "center"
+                    )
+                    (transform  :transform-origin-x "50%"
+                                :transform-origin-y "50%"
+                                :rotate media_art_rotation
+                                
+                                (box    :class "card-art"
+                                        :valign "center"
+                                        :halign "center"
+                                        :style "background-image: url('${player.art == '' ? EWW_CONFIG_DIR + '/default-art.jpg' : player.art}');"
                                 )
                     )
-                    
-                    (box    :class "active-media-controls"
-                            :orientation "h"
-                            (eventbox   :class "active-media-volume-container"
-                                        :onhover    "echo soft > /tmp/eww-media-menu.fifo;
-                                                    eww update \
-                                                    player_changing_volume='${player.player}' \
-                                                    changed_volume_value=${jq(soft_all_media_updates, '."' + player.player + '".volume? // 0') * 100} \
-                                                    volume_hover_sign=$(date +%s%N)"
-                                        :onhoverlost    "setsid -f ~/.config/eww/scripts/media-menu-slider-release.sh volume"
-                                        (scale  :class "active-media-volume"
-                                            :value {player_changing_volume == player.player ? changed_volume_value : jq(soft_all_media_updates, ".\"" + player.player + "\".volume // 0") * 100}
-                                            :min 0
-                                            :max 100
-                                            :active {player.can_volume}
-                                            :onchange   "eww update changed_volume_value={};
-                                                        ~/.config/eww/scripts/media-control.sh volume {} ${player.player} force"
-                                        )
-                            )
-                            (box    :class "active-media-buttons-container"
-                                    :orientation "h"
-                                    (button :class "media-button ${player.can_previous ? '' : 'impossible'}"
-                                            :active {player.can_previous}
-                                            :onclick "playerctl --player ${player.player} previous"
-                                            {icons.previous}
-                                    )
-                                    (button :class "media-button ${player.can_pause ? '' : 'impossible'}"
-                                            :active {player.can_pause}
-                                            :onclick "playerctl --player ${player.player} play-pause"
-                                            {player.playing ? "${icons.pause}" : "${icons.play}"}
-                                    )
-                                    (button :class "media-button  ${player.can_next ? '' : 'impossible'}"
-                                            :active {player.can_next}
-                                            :onclick "playerctl --player ${player.player} next"
-                                            {icons.next}
-                                    )
-                                    (button :class "media-button ${player.loop_status == 'none' ? 'inactive' : ''} ${player.can_loop ? '' : 'impossible'}"
-                                            :active {player.can_loop}
-                                            :onclick    "playerctl --player ${player.player} loop ${
-                                                        player.loop_status == 'none' ? 'Playlist' :
-                                                        player.loop_status == 'playlist' ? 'Track' : 'None'} &&
-                                                        echo hard > /tmp/eww-media-menu.fifo"
-                                            {player.loop_status == 'track'    ? '${icons.loop_one}' : '${icons.loop}'}
-                                    )
-                                    (button :class "media-button ${player.shuffle ? '' : 'inactive'} ${player.can_shuffle ? '' : 'impossible'}" 
-                                            :active {player.can_shuffle}
-                                            :onclick    "playerctl --player ${player.player} shuffle Toggle;
-                                                        echo hard > /tmp/eww-media-menu.fifo"
-                                            {icons.shuffle}
-                                    )
-                            )
+                    (box    :class "vinyl-fg"
+                            :valign "center"
+                            :halign "center"
                     )
+                )
+            )            
+            
+                (box    :class "active-media-info"
+                        :orientation "v"
+                        :space-evenly false
+                        (box    :orientation "v"
+                                :halign "start"
+                                :valign "fill"
+                                :space-evenly false
+                                :class "active-media-text"
+
+                                        
+                                (label      :class "media-artists active"
+                                                :halign "start"
+                                                :justify "left"
+                                                :unindent true
+                                                :text "${player.artists}"    
+                                )
+                                (label      :class "media-title active"     
+                                                :halign "start"
+                                                :xalign 0
+                                                :justify "left"
+                                                :wrap-mode "word"
+                                                :unindent true
+                                                :limit-width 20
+                                                :lines 2
+                                                :text "${player.title}"
+                                )
+                        )
+
+                        (eventbox       :class "media-progress active"
+                                        :onhover    "echo soft > /tmp/eww-media-menu.fifo;
+                                                eww update \
+                                                player_changing_progress='${player.player}' \
+                                                changed_progress_value=${jq(soft_all_media_updates, '."' + player.player + '".progress? // 0') / 1000000} \
+                                                progress_hover_sign=$(date +%s%N)"
+                                        :onhoverlost    "setsid -f ~/.config/eww/scripts/media-menu-slider-release.sh progress"
+                                        (scale  :class "media-progress-scale active"
+                                                :value {player_changing_progress == player.player ? changed_progress_value : jq(soft_all_media_updates, ".\"" + player.player + "\".progress? // 0") / 1000000}
+                                                :min 00
+                                                :max {player.duration > 0 ? player.duration / 1000000 : 1}
+                                                :active {player.can_progress}
+                                                :onchange "~/.config/eww/scripts/media-control.sh seek {} ${player.player} ${player_changing_progress}"
+                                        )
+                        )
+                        
+                        (box    :class "active-card-controls"
+                                :orientation "h"
+                                :valign "end"
+                                :halign "center"
+                                :space-evenly false
+                                (box    :class "media-buttons"
+                                        :orientation "h"
+                                        :spacing 8
+                                        :space-evenly false
+
+                                        (box    :class "buttons-group"
+                                                :orientation "h"
+
+                                                (button :class "media-button active ${player.can_previous ? '' : 'impossible'}"
+                                                        :active {player.can_previous}
+                                                        :onclick "playerctl --player ${player.player} previous"
+                                                        {icons.previous}
+                                                )
+                                                (button :class "media-button active ${player.can_pause ? '' : 'impossible'}"
+                                                        :active {player.can_pause}
+                                                        :onclick "playerctl --player ${player.player} play-pause"
+                                                        {player.playing ? "${icons.pause}" : "${icons.play}"}
+                                                )
+                                                (button :class "media-button active ${player.can_next ? '' : 'impossible'}"
+                                                        :active {player.can_next}
+                                                        :onclick "playerctl --player ${player.player} next"
+                                                        {icons.next}
+                                                )
+                                        )
+                                        (box    :class "buttons-group"
+                                                :orientation "h"
+                                                :space-evenly false
+
+                                                (button :class "media-button active ${player.loop_status == 'none' ? 'off' : ''}"
+                                                        :active {player.can_loop}
+                                                        :onclick    "playerctl --player ${player.player} loop ${
+                                                                        player.loop_status == 'none' ? 'Playlist' :
+                                                                        player.loop_status == 'playlist' ? 'Track' : 'None'} &&
+                                                                        echo hard > /tmp/eww-media-menu.fifo"
+                                                        {player.loop_status == 'track'    ? '${icons.loop_one}' : '${icons.loop}'}
+                                                )
+                                                (button :class "media-button active ${player.shuffle ? '' : 'off'} ${player.can_shuffle ? '' : 'impossible'}" 
+                                                        :active {player.can_shuffle}
+                                                        :onclick    "playerctl --player ${player.player} shuffle Toggle;
+                                                                        echo hard > /tmp/eww-media-menu.fifo"
+                                                        {icons.shuffle}
+                                                )
+                                        )
+                                        
+                                )
+                        )
+                        (box    :class "volume-group active"
+                                :orientation "h"
+                                :halign "center"
+                                :space-evenly false
+                                (button :class "media-button active"
+                                        :onclick "~/.config/eww/scripts/media-control.sh volume {0} ${player.player} force; echo soft > /tmp/eww-media-menu.fifo"
+                                        {jq(soft_all_media_updates, ".\"" + player.player + "\".volume? // 0") > 0.6 ? icons.volume_full : 
+                                        jq(soft_all_media_updates, ".\"" + player.player + "\".volume? // 0") > 0.2 ? icons.volume_half : icons.volume_mute}
+
+                                )
+                                (eventbox       :class "media-volume active"
+                                                :onhover    "echo soft > /tmp/eww-media-menu.fifo;
+                                                        eww update \
+                                                        player_changing_volume='${player.player}' \
+                                                        changed_volume_value=${jq(soft_all_media_updates, '."' + player.player + '".volume? // 0') * 100} \
+                                                        volume_hover_sign=$(date +%s%N)"
+                                                :onhoverlost    "setsid -f ~/.config/eww/scripts/media-menu-slider-release.sh volume"
+                                                (scale  :class "media-volume-scale active"
+                                                        :value {player_changing_volume == player.player ? changed_volume_value : jq(soft_all_media_updates, ".\"" + player.player + "\".volume? // 0") * 100}
+                                                        :min 0
+                                                        :max 100
+                                                        :active {player.can_volume}
+                                                        :onchange   "eww update changed_volume_value={};
+                                                                        ~/.config/eww/scripts/media-control.sh volume {} ${player.player} force"
+                                                )
+                                )
+                        )
+                    
             )
     )
 )
 (defwidget player-card [player visible]
-    (box :class "media-entry" :visible visible
-        (label :text "background ${player.title}")
-    )
+    (box        :class "media-card background" 
+                :visible visible
+                :space-evenly false
+                (box    :orientation "h"
+                        :space-evenly false
+                        (box    :orientation "v"
+                                :halign "start"
+                                :valign "center"
+                                :space-evenly false
+                                :class "background-media-text"
+
+                                        
+                                (label  :class "media-artists background"
+                                        :halign "start"
+                                        :justify "left"
+                                        :unindent true
+                                        :text "${player.artists}"    
+                                )
+                                (label  :class "media-title background"     
+                                        :halign "start"
+                                        :xalign 0
+                                        :justify "left"
+                                        :wrap-mode "word"
+                                        :unindent true
+                                        :limit-width 20
+                                        :lines 2
+                                        :text "${player.title}"
+                                )
+                        )
+                        (box    :orientation "v"
+                                :class "background-media-info"
+                                :valign "center"
+                                :halign "end"
+                                :space-evenly false
+                                (eventbox       :class "media-progress background"
+                                                :onhover    "echo soft > /tmp/eww-media-menu.fifo;
+                                                        eww update \
+                                                        player_changing_progress='${player.player}' \
+                                                        changed_progress_value=${jq(soft_all_media_updates, '."' + player.player + '".progress? // 0') / 1000000} \
+                                                        progress_hover_sign=$(date +%s%N)"
+                                                :onhoverlost    "setsid -f ~/.config/eww/scripts/media-menu-slider-release.sh progress"
+                                                (scale  :class "media-progress-scale background"
+                                                
+                                                        :value {player_changing_progress == player.player ? changed_progress_value : jq(soft_all_media_updates, ".\"" + player.player + "\".progress? // 0") / 1000000}
+                                                        :min 00
+                                                        :max {player.duration > 0 ? player.duration / 1000000 : 1}
+                                                        :active {player.can_progress}
+                                                        :onchange "~/.config/eww/scripts/media-control.sh seek {} ${player.player} ${player_changing_progress}"
+                                                )
+                                )
+                                (box    :class "background-card-controls"
+                                        :orientation "h"
+                                        :valign "end"
+                                        :halign "center"
+                                        :space-evenly false
+                                        (box    :class "media-buttons"
+                                                :orientation "h"
+                                                :halign "center"
+                                                :spacing 8
+                                                :space-evenly false
+
+                                                (box    :class "volume-group background"
+                                                        :orientation "h"
+                                                        :halign "center"
+                                                        :space-evenly false
+                                                        (button :class "media-button background"
+                                                                :onclick "~/.config/eww/scripts/media-control.sh volume {0} ${player.player} force; echo soft > /tmp/eww-media-menu.fifo"
+                                                                {jq(soft_all_media_updates, ".\"" + player.player + "\".volume? // 0") > 0.6 ? icons.volume_full : 
+                                                                jq(soft_all_media_updates, ".\"" + player.player + "\".volume? // 0") > 0.2 ? icons.volume_half : icons.volume_mute}
+
+                                                        )
+                                                        (eventbox       :class "media-volume background"
+                                                                        :onhover    "echo soft > /tmp/eww-media-menu.fifo;
+                                                                                eww update \
+                                                                                player_changing_volume='${player.player}' \
+                                                                                changed_volume_value=${jq(soft_all_media_updates, '."' + player.player + '".volume? // 0') * 100} \
+                                                                                volume_hover_sign=$(date +%s%N)"
+                                                                        :onhoverlost    "setsid -f ~/.config/eww/scripts/media-menu-slider-release.sh volume"
+                                                                        (scale  :class "media-volume-scale background"
+                                                                                :value {player_changing_volume == player.player ? changed_volume_value : jq(soft_all_media_updates, ".\"" + player.player + "\".volume? // 0") * 100}
+                                                                                :min 0
+                                                                                :max 100
+                                                                                :active {player.can_volume}
+                                                                                :onchange   "eww update changed_volume_value={};
+                                                                                                ~/.config/eww/scripts/media-control.sh volume {} ${player.player} force"
+                                                                        )
+                                                        )
+                                                )
+
+                                                (box    :class "buttons-group"
+                                                        :orientation "h"
+
+                                                        (button :class "media-button background ${player.can_previous ? '' : 'impossible'}"
+                                                                :active {player.can_previous}
+                                                                :onclick "playerctl --player ${player.player} previous"
+                                                                {icons.previous}
+                                                        )
+                                                        (button :class "media-button background ${player.can_pause ? '' : 'impossible'}"
+                                                                :active {player.can_pause}
+                                                                :onclick "playerctl --player ${player.player} play-pause"
+                                                                {player.playing ? "${icons.pause}" : "${icons.play}"}
+                                                        )
+                                                        (button :class "media-button background ${player.can_next ? '' : 'impossible'}"
+                                                                :active {player.can_next}
+                                                                :onclick "playerctl --player ${player.player} next"
+                                                                {icons.next}
+                                                        )
+                                                )
+                                                (box    :class "buttons-group"
+                                                        :orientation "h"
+                                                        :space-evenly false
+
+                                                        (button :class "media-button background ${player.loop_status == 'none' ? 'off' : ''}"
+                                                                :active {player.can_loop}
+                                                                :onclick    "playerctl --player ${player.player} loop ${
+                                                                                player.loop_status == 'none' ? 'Playlist' :
+                                                                                player.loop_status == 'playlist' ? 'Track' : 'None'} &&
+                                                                                echo hard > /tmp/eww-media-menu.fifo"
+                                                                {player.loop_status == 'track'    ? '${icons.loop_one}' : '${icons.loop}'}
+                                                        )
+                                                        (button :class "media-button background ${player.shuffle ? '' : 'off'} ${player.can_shuffle ? '' : 'impossible'}" 
+                                                                :active {player.can_shuffle}
+                                                                :onclick    "playerctl --player ${player.player} shuffle Toggle;
+                                                                                echo hard > /tmp/eww-media-menu.fifo"
+                                                                {icons.shuffle}
+                                                        )
+                                                )
+                                                        
+                                        )
+                                )
+                        )
+                )
+        )
 )
+
 
 (defwindow deactivation-area :class "deactivation-area"
             :geometry (geometry :width "100%"

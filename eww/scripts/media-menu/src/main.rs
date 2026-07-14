@@ -3,6 +3,7 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
 use dbus::message::MatchRule;
+use eww_ipc::EwwClient;
 use mpris::{LoopStatus, Metadata, PlaybackStatus, Player, PlayerFinder};
 use serde::Serialize;
 use dbus::blocking::Connection;
@@ -62,7 +63,6 @@ struct PlayerData {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // === SIGNAL EMITTERS ===
     let (tx, rx) = mpsc::channel();
-
 
     let tx_bus_event = tx.clone();
     let conn = Connection::new_session()?;
@@ -124,9 +124,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 
 
+
     // === MAIN SHTUKA ===
     let mut cache: HashMap<String, PlayerData> = HashMap::new();
     let player_finder = PlayerFinder::new()?;
+
+    let eww_ipc = EwwClient::new().unwrap();
 
     let mut menu_status = WidgetStatus::MenuClosed;
     for signal in rx {
@@ -154,23 +157,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 pull_hard(&players, &mut cache);
                 output_hard(&cache);
                 pull_soft(&players, &mut cache, true);
-                output_soft(&cache);
+                output_soft(&cache, &eww_ipc);
             }
             Signal::Tick => {
                 if do_soft_pull {
                     pull_soft(&players, &mut cache, false);
-                    output_soft(&cache);
+                    output_soft(&cache,&eww_ipc);
                 }
             }
             Signal::EwwOpen => {
                 pull_hard(&players, &mut cache);
                 output_hard(&cache);
                 pull_soft(&players, &mut cache, true);
-                output_soft(&cache);
+                output_soft(&cache, &eww_ipc);
             }
             Signal::ForceSoftRefrech => {
                 pull_soft(&players, &mut cache, true);
-                output_soft(&cache);
+                output_soft(&cache, &eww_ipc);
             }
             _ => {}
         };
@@ -350,7 +353,7 @@ struct SoftOutput {
     volume: f64,
 }
 
-fn output_soft(cache: &HashMap<String, PlayerData>) {
+fn output_soft(cache: &HashMap<String, PlayerData>, eww_ipc: &EwwClient) {
     let output_values: HashMap<&str, SoftOutput> = cache.values()
         .map(
             |entry| (entry.player.as_str(), 
@@ -358,10 +361,5 @@ fn output_soft(cache: &HashMap<String, PlayerData>) {
         ).collect();
     let json = serde_json::to_string(&output_values).unwrap();
 
-    Command::new("eww")
-        .arg("update")
-        .arg(&format!("soft_all_media_updates={}", json))
-        .status()
-        .ok();
-
+    eww_ipc.update(&[("soft_all_media_updates", json)]).unwrap();
 }

@@ -1,47 +1,126 @@
+@use "matugen" as *;
+
 .bar {
-    border-radius: 15px
-}
-
-
-.media-button {
-    font-family: "Material Symbols Rounded Filled";
-    font-weight: 800;
-}
-.media-button.inactive {
-    font-weight: 400;
-}
-.media-button.impossible {
-    font-family: "Material Symbols Rounded";
-    font-weight: 200;
-}
-
-.media-menu {
-    background-color: transparent;
+    border-radius: 15px;
 }
 .deactivation-area {
     background-color: transparent;
 }
+.icon {
+    font-family: "Material Symbols Rounded";
+    font-weight: 600;
+}
 
-.transparent {
+// ========== MEDIA ==========
+.media-button {
+    font-family: "Material Symbols Rounded Filled";
+    font-weight: 800;
+}
+
+// ======= Media Menu =======
+.media-menu {
     background-color: transparent;
 }
-.test {
-    background-color: green;
-}
-
-.media-entry-container {
+.media-slot {
     padding-top: 10px;
 }
-.media-entry {
+.media-card {
     border-radius: 20px;
-    background-color: white;
-}
+    background-color: $background;
 
-.media-entry.active {
-    min-height: 300px;
+    border-style: solid;
+    border-color: $outline;
+    border-width: 2px;
 }
+.media-title {
+    color: $primary;
+    background: none;
+}
+.media-artists {
+    color: $secondary;
+    background: none;
+}
+.media-button {
+    background: none;
+    border: none;
+    box-shadow: none;
+    text-shadow: none;
+    color: $primary;
+}
+.media-button.off {
+    font-weight: 300;
+}
+.media-button:disabled {
+    font-weight: 300;
+    color: $outline-variant;
+}
+.media-progress {
+    background: none;
+}
+.volume-group {
+    background: none;
+}
+.media-volume-scale {
+    padding: 0;
+    background: none;
 
-.active-media-art {
+    trough {
+        padding: 0;
+        margin: 0;
+        border-radius: 2px;
+        min-height: 4px;
+        border-width: 0;
+        background-color: $outline-variant;
+    }
+    highlight {
+        border-width: 0;
+        min-height: 4px;
+        border-radius: 2px;
+        background-color: $secondary;
+    }
+    slider {
+        min-width: 0;
+        min-height: 0;
+        margin: 0;
+        background: none;
+    }
+}
+.media-volume {
+    background: none;
+}
+.media-progress-scale {
+    background: none;
+    padding: 0;
+
+    trough {
+        padding: 0;
+        margin: 0;
+        border-radius: 2px;
+        min-height: 4px;
+        border-width: 0;
+        background-color: $outline-variant;
+    }
+    highlight {
+        border-width: 0;
+        min-height: 4px;
+        border-radius: 2px;
+        background-color: $tertiary;
+    }
+    slider {
+        min-width: 0;
+        min-height: 0;
+        margin: 0;
+        background: none;
+    }
+}
+// ----- media menu active -----
+.media-card.active {
+    min-height: 280px;
+}
+.vinyl-container {
+    margin-left: 20px;
+}
+.card-art {
     min-width: 230px;
     min-height: 230px;
     background-size: cover;
@@ -52,12 +131,98 @@
 .vinyl-bg {
     min-width: 250px;
     min-height: 250px;
-    background-color: gray;
+    background-color: $secondary;
     border-radius: 10%;
 }
 .vinyl-fg {
     min-width: 15px;
-    min-height: 15px; 
-    background-color: gray;
+    min-height: 15px;
+    background-color: $tertiary;
     border-radius: 50%;
+}
+.active-media-info {
+    margin-top: 20px;
+    margin-left: 30px;
+    margin-right: 20px;
+    min-width: 300px;
+}
+.active-media-text {
+    min-height: 140px;
+}
+.media-artists.active {
+    font-size: 20px;
+    font-weight: 300;
+    font-style: italic;
+}
+.media-title.active {
+    font-size: 40px;
+    font-weight: 600;
+    min-height: 100px;
+}
+.active-card-controls {
+    margin-top: 20px;
+    
+}
+.media-button.active {
+    font-size: 20px;
+}
+.buttons-group {
+    border-style: solid;
+    border-color: $outline;
+    border-width: 2px;
+    border-radius: 10px;
+}
+.media-progress-scale.active {
+    margin-top: 10px;
+    trough {
+        min-width: 250px;
+    }
+}
+.volume-group.active {
+    margin-top: 2px;
+}
+.media-volume-scale.active {
+    padding: 0;
+
+    trough {
+        min-width: 100px;
+    }
+}
+// ----- media menu background -----
+.media-card.background {
+    min-height: 100px;
+    
+}
+.background-media-text {
+    margin-left: 20px;
+    min-height: 80px;
+    min-width: 250px;
+}
+.media-artists.background {
+    font-size: 15px;
+    font-weight: 300;
+    font-style: italic;
+}
+.media-title.background {
+    font-size: 20px;
+    font-weight: 600;
+    min-height: 60px;
+}
+.background-media-info {
+    margin-right: 20px;
+    margin-left: 30px;
+    min-width: 300px;
+}
+.media-progress-scale.background {
+    trough {
+        min-width: 250px;
+    }
+}
+.media-volume-scale.background {
+    trough {
+        min-width: 60px;
+    }
+}
+.background-card-controls {
+    margin-top: 10px;
 }

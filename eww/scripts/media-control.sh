@@ -25,8 +25,11 @@ case "$ACTION" in
         fi
     ;;
     seek)
-        playerctl --player ${PLAYER} position ${INPUT}
+        if [[ "$PLAYER" == "$FORCE_PLAYER" ]]; then
+            eww update changed_progress_value=${INPUT}
+            playerctl --player ${PLAYER} position ${INPUT}
+            echo soft > /tmp/eww-media-menu.fifo
+        fi
     ;;
 esac
 
-echo soft > /tmp/eww-media-menu.fifo

@@ -1,0 +1,8 @@
+layout {
+    focus-ring {
+        width 2
+        active-color "{{colors.outline.default.hex}}"
+        inactive-color "{{colors.outline_variant.default.hex}}"
+        urgent-color "{{colors.error.default.hex}}"
+    }
+}

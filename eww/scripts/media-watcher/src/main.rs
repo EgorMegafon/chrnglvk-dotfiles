@@ -172,7 +172,8 @@ fn update_metadata(player: &Player, rotate_media_art: &AtomicBool) {
                 _ => PlaybackStatus::Paused,
             };
 
-            let mut output_status = "paused";
+           
+            let output_status;
             match status {
                 PlaybackStatus::Playing => {
                     output_status = "playing";
