@@ -1,3 +1,3 @@
 [workspace]
 resolver = "2"
-members = ["channels-menu","eww-ipc", "layout-watcher", "media-menu", "media-watcher", "resource-watcher"]
+members = ["animation-controller","channels-menu","eww-ipc", "layout-watcher", "media-menu", "media-watcher", "resource-watcher"]

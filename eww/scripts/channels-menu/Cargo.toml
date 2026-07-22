@@ -5,3 +5,5 @@ edition = "2024"
 
 [dependencies]
 pipewire = "0.10.0"
+eww-ipc =  { path = "../eww-ipc" }
+serde_json = "1.0.150"

@@ -28,6 +28,26 @@ close_menus() {
     done
 }
 
+close_other_menus() {
+    local ids=() names=()
+    while IFS=':' read -r id name; do
+        id=$(echo "$id" | xargs)
+        name=$(echo "$name" | xargs)
+        if [[ "$name" == *menu* && "$name" != "$NAME" ]]; then
+            eww update reveal_"${name//-/_}"=false 2>/dev/null
+            ids+=("$id")
+            names+=("$name")
+        fi
+    done < <(eww active-windows)
+
+    (
+        sleep 0.3
+        for id in "${ids[@]}"; do
+            eww close "$id"
+            send_fifo_signal close "${names[$i]}"
+        done
+    ) &
+}
 send_fifo_signal() {
     local fifo="/tmp/eww-${2}.fifo"
     [ -p "$fifo" ] || return 0
@@ -42,6 +62,7 @@ if [[ "$ACTION" == "open-menu" ]]; then
     if eww active-windows | grep -q "^.*: ${NAME}$"; then
         close_menus
     else
+        close_other_menus
         eww open "$NAME" --screen "$SCREEN" --arg screen="$SCREEN"
         #eww open-many deactivation-area:deactivation-area-0 deactivation-area:deactivation-area-1 --arg deactivation-area-0:screen=0 --arg deactivation-area-1:screen=1
         eww update reveal_"${NAME//-/_}"=true 2>/dev/null

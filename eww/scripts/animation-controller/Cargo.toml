@@ -1,0 +1,7 @@
+[package]
+name = "animation-controller"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+eww-ipc =  { path = "../eww-ipc" }

@@ -17,7 +17,7 @@ fn main() {
 
     loop {
         let open = eww.get("reveal_resource_usage").unwrap().unwrap_or("".to_string()) == "true";
-        thread::sleep(Duration::from_secs(2));
+        thread::sleep(Duration::from_secs(1));
         if open { 
             if nvml.is_none() {
                 nvml = Nvml::init().ok();

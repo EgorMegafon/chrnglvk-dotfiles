@@ -23,6 +23,8 @@ case "$ACTION" in
         else
             playerctl --player ${PLAYER} volume ${change_input}
         fi
+        
+        echo soft > /tmp/eww-media-menu.fifo
     ;;
     seek)
         if [[ "$PLAYER" == "$FORCE_PLAYER" ]]; then

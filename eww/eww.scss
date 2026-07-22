@@ -1,7 +1,15 @@
 @use "matugen" as *;
 
 .bar {
-    border-radius: 15px;
+    background-color: transparent;
+    color: $on-background;
+    font-weight: 400;
+    padding-left: 5px;
+    padding-right: 5px;
+    border-radius: 12px;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+    font-weight: 500;
 }
 .deactivation-area {
     background-color: transparent;
@@ -9,6 +17,126 @@
 .icon {
     font-family: "Material Symbols Rounded";
     font-weight: 600;
+    color: $on-background;
+}
+.icon.filled {
+    font-family: "Material Symbols Rounded Filled";
+    font-weight: 600;
+    color: $on-background;
+}
+.bar-island {
+    background-color: $background;
+
+    border-radius: 12px;
+    border-style: solid;
+    border-color: $primary;
+    border-width: 2px;
+
+    padding-left: 15px;
+    padding-right: 15px;
+
+    margin-left: 5px;
+    margin-right: 5px;
+}
+.button {
+    padding: 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+    text-shadow: none;
+    color: $on-background
+}
+.menu-area {
+    color: $on-background;
+    background-color: $background;
+
+    border-radius: 12px;
+    border-style: solid;
+    border-color: $primary;
+    border-width: 2px;
+
+    padding-top: 15px;
+    padding-bottom: 15px;
+    padding-left: 20px;
+    padding-right: 20px;
+
+    margin-top: 10px;
+}
+.scale {
+    padding: 0;
+    background: none;
+
+    trough {
+        padding: 0;
+        margin: 0;
+        border-width: 0;
+        border-radius: 2px;
+        min-height: 4px;
+        background-color: $outline-variant;
+    }
+    highlight {
+        border-width: 0;
+        border-radius: 2px;
+        min-height: 4px;
+        background-color: $secondary;
+    }
+    slider {
+        min-width: 0;
+        min-height: 0;
+        margin: 0;
+        background: none;
+    }
+}
+
+
+// ========== MULTIBUTTON ==========
+.bar-island.multibutton {
+    padding: 0;
+    min-width: 25px;
+}
+.button.multibutton {
+    margin-left: 2px;
+}
+.icon.multibutton {
+    font-size: 20px;
+}
+
+// ======= Resource Monitor =======
+.resource-monitor {
+    min-width: 170px;
+}
+.icon.resource-info {
+    font-size: 20px;
+    font-weight: 400;
+}
+.resource-info-text {
+    font-family: "Monospace Typewriter";
+    font-weight: 500;
+    min-width: 60px;
+}
+
+
+// ========== KEYBOARD ==========
+.keyboard {
+    padding-left: 10px;
+    padding-right: 10px;
+    min-width: 20px;
+    font-size: 15px;
+    
+}
+
+
+// ========== CLOCK ==========
+// ======= Clock Widget =======
+.clock {
+    padding-left: 17px;
+    padding-right: 10px;
+}
+.time {
+    min-width: 50px;
+}
+.icon.timer {
+    font-size: 20px;
 }
 
 // ========== MEDIA ==========
@@ -17,20 +145,25 @@
     font-weight: 800;
 }
 
+// ======= Media Widget =======
+.bar-island.now-playing {
+    min-width: 300px;
+}
+.media-button.widget {
+    color: $on-background;
+    padding: 0;
+    font-size: 20px;
+}
+.media-title.widget {
+    color: $on-background;
+}
+.icon.widget {
+    font-size: 20px;
+}
+
 // ======= Media Menu =======
 .media-menu {
     background-color: transparent;
-}
-.media-slot {
-    padding-top: 10px;
-}
-.media-card {
-    border-radius: 20px;
-    background-color: $background;
-
-    border-style: solid;
-    border-color: $outline;
-    border-width: 2px;
 }
 .media-title {
     color: $primary;
@@ -60,66 +193,21 @@
 .volume-group {
     background: none;
 }
-.media-volume-scale {
-    padding: 0;
-    background: none;
 
-    trough {
-        padding: 0;
-        margin: 0;
-        border-radius: 2px;
-        min-height: 4px;
-        border-width: 0;
-        background-color: $outline-variant;
-    }
+.media-volume-scale {
     highlight {
-        border-width: 0;
-        min-height: 4px;
-        border-radius: 2px;
         background-color: $secondary;
-    }
-    slider {
-        min-width: 0;
-        min-height: 0;
-        margin: 0;
-        background: none;
     }
 }
 .media-volume {
     background: none;
 }
-.media-progress-scale {
-    background: none;
-    padding: 0;
-
-    trough {
-        padding: 0;
-        margin: 0;
-        border-radius: 2px;
-        min-height: 4px;
-        border-width: 0;
-        background-color: $outline-variant;
-    }
+.scale.media-progress-scale {
     highlight {
-        border-width: 0;
-        min-height: 4px;
-        border-radius: 2px;
         background-color: $tertiary;
-    }
-    slider {
-        min-width: 0;
-        min-height: 0;
-        margin: 0;
-        background: none;
     }
 }
 // ----- media menu active -----
-.media-card.active {
-    min-height: 280px;
-}
-.vinyl-container {
-    margin-left: 20px;
-}
 .card-art {
     min-width: 230px;
     min-height: 230px;
@@ -132,7 +220,7 @@
     min-width: 250px;
     min-height: 250px;
     background-color: $secondary;
-    border-radius: 10%;
+    border-radius: 20px;
 }
 .vinyl-fg {
     min-width: 15px;
@@ -141,9 +229,7 @@
     border-radius: 50%;
 }
 .active-media-info {
-    margin-top: 20px;
     margin-left: 30px;
-    margin-right: 20px;
     min-width: 300px;
 }
 .active-media-text {
@@ -172,7 +258,7 @@
     border-width: 2px;
     border-radius: 10px;
 }
-.media-progress-scale.active {
+.scale.media-progress-scale.active {
     margin-top: 10px;
     trough {
         min-width: 250px;
@@ -181,7 +267,7 @@
 .volume-group.active {
     margin-top: 2px;
 }
-.media-volume-scale.active {
+.scale.media-volume-scale.active {
     padding: 0;
 
     trough {
@@ -189,12 +275,7 @@
     }
 }
 // ----- media menu background -----
-.media-card.background {
-    min-height: 100px;
-    
-}
 .background-media-text {
-    margin-left: 20px;
     min-height: 80px;
     min-width: 250px;
 }
@@ -209,20 +290,80 @@
     min-height: 60px;
 }
 .background-media-info {
-    margin-right: 20px;
     margin-left: 30px;
     min-width: 300px;
 }
-.media-progress-scale.background {
+.scale.media-progress-scale.background {
     trough {
         min-width: 250px;
     }
 }
-.media-volume-scale.background {
+.scale.media-volume-scale.background {
     trough {
         min-width: 60px;
     }
 }
 .background-card-controls {
     margin-top: 10px;
+}
+.volume-group.background {
+    padding-right: 10px;
+}
+
+
+// ========== CHANNELS MENU ==========
+.channels-menu {
+    background-color: transparent;
+}
+.node-card {
+    min-width: 300px;
+}
+.icon.node-mute.default {
+    font-size: 20px;
+}
+.icon.node-mute {
+    font-size: 15px;
+}
+.icon.open-devices {
+    font-size: 20px;
+}
+.scale.node-volume-scale {
+    min-width: 200px;
+    padding-left: 5px;
+}
+.scale.node-volume-scale.default {
+    min-width: 250px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+.device-name.default {
+    color: $primary;
+    font-size: 20px;
+    font-weight: 600;
+
+    margin-bottom: 10px;
+}
+.inactive-nodes {
+    margin-top: 10px;
+}
+.stream-name {
+    font-size: 17px;
+    font-weight: 500;
+
+    min-width: 100px;
+
+    padding-right: 10px;
+}
+.icon.mute {
+    color: $error;
+}
+
+
+
+
+// ========== CONTROL BUTTON ==========
+.icon.control-button {
+    font-size: 20px;
+    margin-left: 8px;
+    margin-right: 13px;
 }

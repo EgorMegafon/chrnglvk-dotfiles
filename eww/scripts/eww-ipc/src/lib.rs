@@ -35,6 +35,7 @@ enum Action {
     GetVar { name: String },
 }
 
+#[derive(Clone)]
 pub struct EwwClient {
     socket_path: PathBuf,
 }

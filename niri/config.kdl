@@ -28,6 +28,7 @@ spawn-at-startup "polkit-gnome"
 // === use random shit ===
 spawn-at-startup "awww-daemon" "--namespace" "backdrop"
 spawn-at-startup "~/.config/niri/scripts/restart-eww.sh"
+spawn-sh-at-startup "~/.local/bin/noid"
 
 // = my scripts =
 
@@ -102,7 +103,14 @@ blur {
 }
 
 window-rule {
+    geometry-corner-radius 12
+    clip-to-geometry true
+    draw-border-with-background false
+}
+
+window-rule {
     match app-id="Alacritty"
+
     
 
     background-effect {
@@ -116,6 +124,7 @@ window-rule {
 window-rule {
     match app-id="Spotify"
     match app-id="org.gnome.Nautilus"
+
 
     background-effect {
         blur true
@@ -268,12 +277,6 @@ workspace "Autism" {
 
 // ##### Window Rules #####
 window-rule {
-    match app-id=r#"^org\.gnome\."#
-    draw-border-with-background false
-    geometry-corner-radius 12
-    clip-to-geometry true
-}
-window-rule {
     match app-id=r#"^gnome-control-center$"#
     match app-id=r#"^pavucontrol$"#
     match app-id=r#"^nm-connection-editor$"#
@@ -332,7 +335,7 @@ window-rule {
 }
 
 
-// === Open Maximized ===
+// === Open Rules ===
 window-rule {
     exclude app-id="Alacritty"
 
@@ -344,21 +347,18 @@ window-rule {
     open-maximized true
 }
 
-
-// === Open Floating ===
 window-rule {
     match app-id="steam"
     match app-id="Flameshot"
     match title="Picture-in-Picture"
     exclude app-id="steam" title="Steam"
     match app-id="io.missioncenter.MissionCenter"
+    match app-id=r#"firefox$"# title="^Picture-in-Picture$"
 
     
     open-floating true
 }
 
-
-// === Misc ===
 window-rule {
     match at-startup=false
     exclude app-id="steam"
@@ -366,21 +366,6 @@ window-rule {
     open-focused true
 }
 
-window-rule {
-    match app-id="Alacritty"
-    match app-id="zen"
-    match app-id="com.mitchellh.ghostty"
-    match app-id="kitty"
-    draw-border-with-background false
-}
-window-rule {
-    match app-id=r#"firefox$"# title="^Picture-in-Picture$"
-    open-floating true
-}
-window-rule {
-    geometry-corner-radius 12
-    clip-to-geometry true
-}
 
 
 
@@ -407,11 +392,11 @@ binds {
     Mod+V repeat=false { spawn "vicinae" "vicinae://launch/clipboard/history"; }
 
 
-
-    // DMS Utils
+    // Utils
     Ctrl+Shift+Escape hotkey-overlay-title="Task Manager" {
         spawn "dms" "ipc" "call" "processlist" "toggle";
     }
+    Mod+C repeat=false { spawn-sh "killall hyprpicker 2>/dev/null; hyprpicker -aq"; }
 
 
     // === Security ===
@@ -422,10 +407,10 @@ binds {
 
     // === Audio Controls ===
     XF86AudioRaiseVolume allow-when-locked=true {
-        spawn "dms" "ipc" "call" "audio" "increment" "5";
+        spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+";
     }
     XF86AudioLowerVolume allow-when-locked=true {
-        spawn "dms" "ipc" "call" "audio" "decrement" "5";
+        spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-";
     }
     XF86AudioMute allow-when-locked=true {
         spawn "dms" "ipc" "call" "audio" "mute";
@@ -441,7 +426,6 @@ binds {
 
     Mod+F { maximize-column; }
     Mod+Shift+F { fullscreen-window; }
-    //Mod+Alt+F { maximize-window-to-edges; }
     
     Mod+T { spawn "~/.config/niri/scripts/toggle-float.sh";  }
     Mod+Shift+T { switch-focus-between-floating-and-tiling; }
@@ -569,7 +553,6 @@ binds {
     Mod+Shift+R { switch-preset-window-height; }
     Mod+Ctrl+R { reset-window-height; }
     Mod+Ctrl+F { expand-column-to-available-width; }
-    Mod+C { center-column; }
     Mod+Ctrl+C { center-visible-columns; }
 
     // === Manual Sizing ===

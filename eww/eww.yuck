@@ -13,153 +13,289 @@
     "volume_full":      "\\ue050",
     "volume_half":      "\\ue04d",
     "volume_mute":      "\\ue04e",
-    "volume_off":       "\\ue04f"
+    "volume_off":       "\\ue04f",
+    "note":             "\\ue405",
+    "timer":            "\\ue425",
+    "alarm":            "\\ue855",
+    "mic":              "\\ue029",
+    "mic_muted":        "\\ue02b",
+    "output":           "\\uf4f2",
+    "output_muted":     "\\uf4f3",
+    "open_list":        "\\ue313"
 }')
 
 
 
 (defwindow bar [screen] :class "bar"
-           :geometry (geometry :x "0%"
-                               :y "0%"
-                               :width "100%"
-                               :height "20px"
-                               :anchor "top center")
-           :stacking "fg"
-           :exclusive true
-           :focusable "none"
-           :windowtype "toolbar"
-           :wm-ignore false
-    (centerbox
-        (box :halign "start" :space-evenly false
-            (multibutton)
-            (resource-monitor)
-            (keyboard)
-            )
-        (box :halign "center"
-            (clock)
+                        :geometry (geometry :x "0%"
+                                        :y "0%"
+                                        :width "100%"
+                                        :height "20px"
+                                        :anchor "top center")
+                        :stacking "fg"
+                        :exclusive true
+                        :focusable "none"
+                        :windowtype "toolbar"
+                        :wm-ignore false
+    (centerbox 
+        (box    :halign "start" 
+                :space-evenly false
+
+                (multibutton)
+                (keyboard)
         )
-        (box :halign "end"
-            (all-stuff-listener :visible false)
-            (media-widget :screen screen)
+        (box    :halign "center"
+                :space-evenly false
+                
+                (clock)
+        )
+        (box    :halign "end"
+                :space-evenly false
+
+                (all-stuff-listener :visible false)
+                (media-widget :screen screen)
+                (control-button)
         )
     )
 )
 
+(defvar reveal_media_menu false)
+(defwindow media-menu [screen]
+                :class "media-menu"
+                :namespace "eww-menu"
+                :screen screen
+                :geometry (geometry     :anchor "top right"
+                                        :x "5px"
+                                        :y "0"
+                                        :width "200px")
+                :stacking "overlay"
+                :exclusive false
+                :focusable "none"
+                
+                                
+                (revealer       :transition "slidedown"
+                                :duration "300ms"
+                                :reveal reveal_media_menu
+
+                                (media-menu-content)
+                )
+)
+
+(defvar reveal_channels_menu false)
+(defwindow channels-menu [screen]
+                :class "channels-menu"
+                :namespace "eww-menu"
+                :screen screen
+                :geometry (geometry     :anchor "top right"
+                                        :x "5px"
+                                        :y "0"
+                                        :width "200px")
+                :stacking "overlay"
+                :exclusive false
+                :focusable "none"
+                
+                                
+                (revealer       :transition "slidedown"
+                                :duration "300ms"
+                                :reveal reveal_channels_menu
+
+                                (channels-menu-content)
+                )         
+
+)
+
+
 (defwidget all-stuff-listener [] 
-    (label :visible false :text all_media)
+        (box    :visible false
+                (label :text all_media)
+                (label :text pipewire_data)
+        )
+        
 )
 
 (defvar reveal_resource_usage false)
 (defwidget multibutton []
-    (button :class "menu-button"
-            :onclick "eww update reveal_resource_usage=${!reveal_resource_usage}"
-            :onrightclick "niri msg action toggle-overview"
-            (label :text "${icons.menu}" :class "icon")
-    )
+        (box    :class "bar-island multibutton"
+                :space-evenly false
+                :halign "center"
+                (button :class "button multibutton"
+                        :halign "center"
+                        :onclick "eww update reveal_resource_usage=${!reveal_resource_usage}"
+                        :onrightclick "niri msg action toggle-overview"
+                        (label :text "${icons.menu}" :class "icon multibutton")
+                )
+                (revealer   
+                                :reveal reveal_resource_usage
+                                :transition "slideright"
+                                :duration "400ms"
+                                                               
+                                (box    :class "resource-monitor"
+                                        :halign "center"
+                                        :space-evenly false
+                                        :spacing 2
+                                        (label  :class "widget-separator"
+                                                :text "|"
+                                        )
+                                        (box    :class "resource-item"
+                                                :orientation "h"
+                                                :space-evenly false
+                                                :halign "start"
+                                                :spacing 4
+                                                (label :text "${icons.ram}" :class "icon resource-info")
+                                                (label  :class "resource-info-text"
+                                                        :halign "start"
+                                                        :xalign 0
+                                                        :text "${resource_usage.ram}GB"
+                                                )
+                                        )
+                                        (box    :class "resource-item"
+                                                :orientation "h"
+                                                :space-evenly false
+                                                :halign "start"
+                                                :spacing 2
+                                                (label :text "${icons.gpu}" :class "icon resource-info")
+                                                (label  :class "resource-info-text"
+                                                        :halign "start"
+                                                        :xalign 0
+                                                        :text "${resource_usage.vram}GB"
+                                                )
+                                        )
+                                        (box    :class "resource-item"
+                                                :orientation "h"
+                                                :space-evenly false
+                                                :halign "start"
+                                                :spacing 4
+                                                (label :text "${icons.cpu}" :class "icon resource-info")
+                                                (label  :class "resource-info-text"
+                                                        :halign "start"
+                                                        :xalign 0
+                                                        :text "${resource_usage.cpu}%"
+                                                )
+                                        )
+                                )
+
+                )
+        )
+        
 )
 
 (deflisten resource_usage :initial '{"cpu": "0.0", "ram": "0.0", "vram": "0.0"}'
     "~/.config/eww/scripts/target/release/resource-watcher")
-(defwidget resource-monitor []
-    (revealer   :class "resource-monitor"
-                :reveal reveal_resource_usage
-                :transition "slideright"
-                
-                (box
-                    (box    :class "resource-item"
-                            :orientation "h"
-                            (label :text "${icons.cpu}" :class "icon")
-                            (label :text "${resource_usage.cpu}%")
-                    )
-                    (box    :class "resource-item"
-                            :orientation "h"
-                            (label :text "${icons.ram}" :class "icon")
-                            (label :text "${resource_usage.ram} GB")
-                    )
-                    (box    :class "resource-item"
-                            :orientation "h"
-                            (label :text "${icons.gpu}" :class "icon")
-                            (label :text "${resource_usage.vram} GB")
-                    )
-                    
-                    
-                    
-                )
 
-    )
-)
 
 (deflisten lang :initial "en"
     "~/.config/eww/scripts/target/release/layout-watcher")
 (defwidget keyboard []
-    (button :class "keyboard"
-            :onclick "niri msg action switch-layout next"
-            lang
-    )
+        (eventbox       :class "bar-island"
+                        :onclick "niri msg action switch-layout next"
+                        (label  :class "keyboard"
+                                :halign "center"
+                                :xalign 0.5
+                                :text lang
+                        )
+        )
+        
 )
 
+(defvar reveal_timer false)
 (defwidget clock []
-    (eventbox  :class "clock"
-               :onscroll "~/.config/eww/scripts/vertical-scroll.sh {}"
-               :onrightclick "niri msg action toggle-overview"
-               (label :text {formattime(EWW_TIME, "%a, %e %B %H:%M")})
-    )
+        (eventbox       :class "bar-island"
+                        :halign "center"
+                        :onclick "eww update reveal_timer=${!reveal_timer}"
+                        :onscroll "~/.config/eww/scripts/vertical-scroll.sh {}"
+                        :onrightclick "niri msg action toggle-overview"
+                        (box    :class "clock"
+                                :space-evenly false
+                                :halign "center"
+                                (label  :class "date"
+                                        :text {formattime(EWW_TIME, "%a, %e %B")}
+                                )
+                                (label  :class "time"
+                                        :halign "center"
+                                        :xalign 0.5
+                                        :text {formattime(EWW_TIME, "%H:%M")}
+                                )
+                                (revealer       :reveal reveal_timer
+                                                :transition "slideright"
+                                                :duration "300ms"
+                                                
+                                                (box    :class "timer"
+                                                        :space-evenly false
+                                                        (label  :class "widget-separator"
+                                                                :text "|"
+                                                        )
+                                                        (label  :class "icon timer"
+                                                                :text "${icons.timer}"
+                                                        )
+                                                        (label  :class "text timer"
+                                                                :text "timer here"
+                                                        )
+                                                )
+                                )
+                        )
+                        
+        )
 )
 
 
 (deflisten active_media :initial '{"title": "nothing...", "artists": "nobody...", "player": "Spotify", "status": "playing"}'
     "~/.config/eww/scripts/target/release/media-watcher")
 (defwidget media-widget [screen]
-    (box
-        (box    :class "media-buttons"
-                (button     :class "media-button"
-                            :onclick "playerctl --player ${active_media.player} previous"
-                            {icons.previous}
+        (box    :class "bar-island now-playing"
+                :halign "end"
+                :space-evenly false
+                :spacing 18
+                (box    :class "media-buttons widget"
+                        :halign "start"
+                        (box    
+                                :valign "center"
+                                :spacing 10
+                                (button :class "media-button widget"
+                                        :onclick "playerctl --player ${active_media.player} previous"
+                                        {icons.previous}
+                                )
+                                (button :class "media-button widget"
+                                        :onclick "playerctl --player ${active_media.player} play-pause"
+                                        (label :text    "${active_media.status == 'playing' 
+                                                        ? '${icons.pause}' 
+                                                        : '${icons.play}'}")
+                                )
+                                (button :class "media-button widget"
+                                        :onclick "playerctl --player ${active_media.player} next"
+                                        {icons.next}
+                                )
+                        )
                 )
-                (button     :class "media-button"
-                            :onclick "playerctl --player ${active_media.player} play-pause"
-                            (label :text    "${active_media.status == 'playing' 
-                                            ? '${icons.pause}' 
-                                            : '${icons.play}'}")
+                (eventbox       :halign "center"
+                                :onscroll "~/.config/eww/scripts/media-control.sh volume {} ${active_media.player}"
+                                :onclick    "setsid -f ~/.config/eww/scripts/menus-manager.sh open-menu media-menu ${screen}"
+                                :onrightclick "setsid -f ~/.config/eww/scripts/menus-manager.sh open-menu channels-menu ${screen}"
+                                :onmiddleclick "pkill -USR1 -f 'eww/scripts/target/release/media-watcher'"
+                                
+                                (box    :space-evenly false
+                                        :spacing 4
+                                        (label  :class "icon widget"
+                                                :halign "end"
+                                                :text "${icons.note}"   
+                                        )
+                                        (label  :class "media-title widget"
+                                                :halign "center"
+                                                :limit-width 17
+                                                :justify "center"
+                                                :xalign 0.5
+                                                :yalign 0.5
+                                                :text {strlength(active_media.title) < 17 ? "${active_media.title} - ${active_media.artists}" : "${active_media.title}"}
+                                        )
+                                )
+                                
                 )
-                (button     :class "media-button"
-                            :onclick "playerctl --player ${active_media.player} next"
-                            {icons.next}
-                )
-        )
-        (eventbox   :class "now-playing"
-                    :onscroll "~/.config/eww/scripts/media-control.sh volume {} ${active_media.player}"
-                    :onclick    "setsid -f ~/.config/eww/scripts/menus-manager.sh open-menu media-menu ${screen}"
-                    :onrightclick "pkill -USR1 -f 'eww/scripts/target/release/media-watcher'"
-                    :onmiddleclick "pkill -USR1 -f 'eww/scripts/target/release/media-watcher'"
-                    (label :text "${active_media.title} - ${active_media.artists}")
-        )
     )
 )
 
 (deflisten all_media :initial "[]"
     "~/.config/eww/scripts/target/release/media-menu")
 (defvar soft_all_media_updates "{}")
-(defvar reveal_media_menu false)
-(defwindow media-menu [screen]
-            :class "media-menu"
-            :namespace "eww-menu"
-            :screen screen
-            :geometry (geometry :anchor "top right"
-                                    :x "10px"
-                                    :y "0"
-                                    :width "200px")
-            :stacking "overlay"
-            :exclusive false
-            :focusable "none"
-        (revealer   :transition "slidedown"
-                    :duration "300ms"
-                    :reveal reveal_media_menu
 
-            (media-menu-content)
-        )
-        
-)
 (defwidget media-menu-content []
     (box    :orientation "v" 
             :space-evenly false
@@ -184,7 +320,7 @@
 
 (defvar media_art_rotation 0)
 (defwidget active-card [player visible]
-    (box    :class "media-card active"
+    (box    :class "menu-area media-active"
             :orientation "h"
             :visible visible
             :space-evenly false
@@ -217,10 +353,11 @@
             
                 (box    :class "active-media-info"
                         :orientation "v"
+                        :valign "center"
                         :space-evenly false
                         (box    :orientation "v"
                                 :halign "start"
-                                :valign "fill"
+                                :valign "center"
                                 :space-evenly false
                                 :class "active-media-text"
 
@@ -250,7 +387,7 @@
                                                 changed_progress_value=${jq(soft_all_media_updates, '."' + player.player + '".progress? // 0') / 1000000} \
                                                 progress_hover_sign=$(date +%s%N)"
                                         :onhoverlost    "setsid -f ~/.config/eww/scripts/media-menu-slider-release.sh progress"
-                                        (scale  :class "media-progress-scale active"
+                                        (scale  :class "scale media-progress-scale active"
                                                 :value {player_changing_progress == player.player ? changed_progress_value : jq(soft_all_media_updates, ".\"" + player.player + "\".progress? // 0") / 1000000}
                                                 :min 00
                                                 :max {player.duration > 0 ? player.duration / 1000000 : 1}
@@ -327,7 +464,7 @@
                                                         changed_volume_value=${jq(soft_all_media_updates, '."' + player.player + '".volume? // 0') * 100} \
                                                         volume_hover_sign=$(date +%s%N)"
                                                 :onhoverlost    "setsid -f ~/.config/eww/scripts/media-menu-slider-release.sh volume"
-                                                (scale  :class "media-volume-scale active"
+                                                (scale  :class "scale media-volume-scale active"
                                                         :value {player_changing_volume == player.player ? changed_volume_value : jq(soft_all_media_updates, ".\"" + player.player + "\".volume? // 0") * 100}
                                                         :min 0
                                                         :max 100
@@ -342,7 +479,7 @@
     )
 )
 (defwidget player-card [player visible]
-    (box        :class "media-card background" 
+    (box        :class "menu-area media-background" 
                 :visible visible
                 :space-evenly false
                 (box    :orientation "h"
@@ -383,7 +520,7 @@
                                                         changed_progress_value=${jq(soft_all_media_updates, '."' + player.player + '".progress? // 0') / 1000000} \
                                                         progress_hover_sign=$(date +%s%N)"
                                                 :onhoverlost    "setsid -f ~/.config/eww/scripts/media-menu-slider-release.sh progress"
-                                                (scale  :class "media-progress-scale background"
+                                                (scale  :class "scale media-progress-scale background"
                                                 
                                                         :value {player_changing_progress == player.player ? changed_progress_value : jq(soft_all_media_updates, ".\"" + player.player + "\".progress? // 0") / 1000000}
                                                         :min 00
@@ -420,7 +557,7 @@
                                                                                 changed_volume_value=${jq(soft_all_media_updates, '."' + player.player + '".volume? // 0') * 100} \
                                                                                 volume_hover_sign=$(date +%s%N)"
                                                                         :onhoverlost    "setsid -f ~/.config/eww/scripts/media-menu-slider-release.sh volume"
-                                                                        (scale  :class "media-volume-scale background"
+                                                                        (scale  :class "scale media-volume-scale background"
                                                                                 :value {player_changing_volume == player.player ? changed_volume_value : jq(soft_all_media_updates, ".\"" + player.player + "\".volume? // 0") * 100}
                                                                                 :min 0
                                                                                 :max 100
@@ -476,6 +613,225 @@
                 )
         )
 )
+
+
+(defvar audio_streams "")
+(defvar audio_inputs "")
+(defvar audio_outputs "")
+(deflisten pipewire_data :default "[]"
+        "~/.config/eww/scripts/target/release/channels-menu")
+(defwidget channels-menu-content []
+        (box    :orientation "v" 
+                :space-evenly false
+                :class "transparent"
+
+                (pipewire-outputs)
+                (pipewire-inputs)
+                (pipewire-streams)                
+        )
+)
+(defvar reveal_inactive_outputs false)
+(defvar media_outputs_reveal_button_rotation 0.0)
+(defwidget pipewire-outputs []
+       (box     :class "menu-area outputs"
+                :orientation "v"
+                :space-evenly false
+
+                
+                (box    :class "node-slot"
+                        :space-evenly false
+                        (device-card :node {jq(audio_outputs, 'map(select(.default == true))[0]')} :type "output" :active true)
+                        (eventbox
+                                :onclick 
+                                        "eww update reveal_inactive_outputs=${!reveal_inactive_outputs} &
+                                        echo ${!reveal_inactive_outputs ? 'open_media_outputs' : 'close_media_outputs'} > /tmp/eww-animation-controller.fifo"
+                                (transform
+                                        :transform-origin-x "50%"
+                                        :transform-origin-y "50%"
+                                        :rotate media_outputs_reveal_button_rotation
+
+                                        (label  :class "icon open-devices"
+                                                :valign "center"
+                                                :halign "center"
+                                                :text "${icons.open_list}"
+                                        )
+                                )
+                                        
+                        )
+                )
+                
+                (revealer       :transition "slidedown"
+                                :duration "300ms"
+                                :reveal reveal_inactive_outputs
+
+                        (box    :class "inactive-nodes"
+                                :orientation "v"
+                                :spacing 5
+
+                                (for node in {jq(audio_outputs, 'map(select(.default == false))')}
+                                        (device-card :node node :type "output" :active false)  
+                                )
+                        )
+                                
+                )
+                
+                
+        ) 
+)
+(defvar reveal_inactive_inputs false)
+(defvar media_inputs_reveal_button_rotation 0.0)
+(defwidget pipewire-inputs []
+        (box    :class "menu-area inputs"
+                :orientation "v"
+                :space-evenly false
+
+                (box    :class "default-node"
+                        :space-evenly false
+
+                        (device-card :node {jq(audio_inputs, 'map(select(.default == true))[0]')} :type "input" :active true)
+                                (eventbox
+                                :onclick 
+                                        "eww update reveal_inactive_inputs=${!reveal_inactive_inputs} &
+                                        echo ${!reveal_inactive_inputs ? 'open_media_inputs' : 'close_media_inputs'} > /tmp/eww-animation-controller.fifo"
+                                (transform
+                                        :transform-origin-x "50%"
+                                        :transform-origin-y "50%"
+                                        :rotate media_inputs_reveal_button_rotation
+
+                                        (label  :class "icon open-devices"
+                                                :valign "center"
+                                                :halign "center"
+                                                :text "${icons.open_list}"
+                                        )
+                                )           
+                        )
+                )
+
+                
+                (revealer       :transition "slidedown"
+                                :duration "300ms"
+                                :reveal reveal_inactive_inputs
+
+                        (box    :class "inactive-nodes"
+                                :orientation "v"
+                                :space-evenly false
+                                :spacing 5
+
+                                (for node in {jq(audio_inputs, 'map(select(.default == false))')}
+                                        (device-card :node node :type "input" :active false)
+                                )
+
+                        )
+                )
+                
+        )
+)
+(defwidget device-card [node type active]
+        (box    :class "node-card"
+                :orientation "v"
+                :halign "center"
+                :space-evenly false
+
+                (eventbox
+                        :onclick "~/.config/eww/scripts/device-volume-control.sh ${node.id} default"
+
+                        (label  :class "device-name ${active ? 'default' : ''}"
+                                :halign {active ? "start" : "center"}
+                                :valign "center"
+                                :xalign 0.5
+                                :yalign 0.5
+                                :text {node.name}
+                        )
+                )
+                
+                (box    :class "node-controls ${active ? 'default' : ''}"
+                        :orientation "h"
+                        :space-evenly false
+                        :valign "center"
+                        :halign "center"
+
+                        (eventbox       :class "node-mute"
+                                        :onclick "~/.config/eww/scripts/device-volume-control.sh ${node.id} mute"
+                                        (box
+                                                (label  :class "icon node-mute ${active ? 'default filled' : ''} ${pipewire_data[node.id].muted ? 'mute' : ''}"
+                                                        :visible {type == "input"}
+                                                        :text {pipewire_data[node.id].muted ? "${icons.mic_muted}" : "${icons.mic}"}
+                                                )
+                                                (label  :class "icon node-mute ${active ? 'default filled' : ''} ${pipewire_data[node.id].muted ? 'mute' : ''}"
+                                                        :visible {type == "output"}
+                                                        :text {pipewire_data[node.id].muted ? "${icons.output_muted}" : "${icons.output}"}
+                                                )
+                                        )
+                                        
+                        )
+                        (scale  :class "scale node-volume-scale ${active ? 'default' : ''}"
+                                :value {pipewire_data[node.id].volume * 100}
+                                :min 0
+                                :max 100
+                                :onchange "~/.config/eww/scripts/device-volume-control.sh ${node.id} volume {}"
+                                
+                        )
+                )
+        )
+)
+
+(defwidget pipewire-streams []
+        (box    :class "menu-area streams"
+                :orientation "v"
+                :spacing 5
+
+                (for group in audio_streams
+                        (box    :class "node-slot"
+                                (stream-card :group group)
+                        )
+                )
+        )
+)
+(defwidget stream-card [group]
+        (box    :class "node-card"
+                :orientation "h"
+                :space-evenly false
+                :halign "center"
+
+                (label  :class "stream-name"
+                        :halign "end"
+                        :valign "center"
+                        :xalign 1.0
+                        :yalign 0.5
+                        :limit-width 10
+                        :text "${group.name}"
+                )  
+                (eventbox       :class "node-mute"
+                                :onclick "~/.config/eww/scripts/app-volume-control.sh mute ${pipewire_data[group.ids[0]].muted ? 0 : 1} ${jq(group.ids, 'map(tostring) | join(" ")')}"
+                                
+                                (label  :class "icon filled node-mute default ${pipewire_data[group.ids[0]].muted ? 'mute' : '' }"
+                                        :text {pipewire_data[group.ids[0]].muted ? "${icons.volume_off}" : "${icons.volume_full}"}
+                                )
+                                
+                )
+                (scale  :class "scale node-volume-scale"
+                        :value {pipewire_data[group.ids[0]].volume * 100}
+                        :min 0
+                        :max 100
+                        :onchange "setsid -f ~/.config/eww/scripts/app-volume-control.sh volume {} '${group.name}' ${jq(group.ids, 'map(tostring) | join(" ")')}"
+                )
+                
+        )
+)
+
+(defwidget control-button []
+        (eventbox       :class "bar-island"
+
+                
+                (label  :class "icon control-button"
+                        :halign "center"
+                        :xalign 0.5
+                        :text "󰣇"
+                )
+                
+        )
+)
+
 
 
 (defwindow deactivation-area :class "deactivation-area"

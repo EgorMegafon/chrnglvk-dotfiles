@@ -19,6 +19,8 @@ enum Signal {
     EwwOpen,
     EwwClose,
     ForceSoftRefrech,
+    ArtTick,
+    ArtUpdate(String, String),
 }
 
 enum WidgetStatus {
@@ -96,6 +98,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
+    let tx_art_tick = tx.clone();
+    thread::spawn(move || {
+        loop {
+            thread::sleep(Duration::from_secs(10));
+            tx_art_tick.send(Signal::ArtTick).unwrap();
+        }
+    });
+
     let tx_user_event = tx.clone();
     thread::spawn(move || {
         let path = "/tmp/eww-media-menu.fifo";
@@ -141,7 +151,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 menu_status = WidgetStatus::MenuClosed;
                 continue;
             }
-            Signal::Tick => {
+            Signal::Tick | Signal::ArtTick => {
                 if matches!(menu_status, WidgetStatus::MenuClosed) {
                     continue;
                 }
@@ -151,10 +161,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let players = player_finder.find_all().unwrap_or_default();
         let do_soft_pull = sync_players(&players, &mut cache);
+
+        let tx_art_update = tx.clone();
         
         match signal {
             Signal::Event => {
                 pull_hard(&players, &mut cache);
+                request_art(&players, &mut cache, &tx_art_update);
                 output_hard(&cache);
                 pull_soft(&players, &mut cache, true);
                 output_soft(&cache, &eww_ipc);
@@ -167,6 +180,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             Signal::EwwOpen => {
                 pull_hard(&players, &mut cache);
+                request_art(&players, &mut cache, &tx_art_update);
                 output_hard(&cache);
                 pull_soft(&players, &mut cache, true);
                 output_soft(&cache, &eww_ipc);
@@ -174,6 +188,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Signal::ForceSoftRefrech => {
                 pull_soft(&players, &mut cache, true);
                 output_soft(&cache, &eww_ipc);
+            }
+            Signal::ArtTick => {
+                request_art(&players, &mut cache, &tx_art_update);
+            }
+            Signal::ArtUpdate(id, url) => {
+                update_art(&mut cache, &id, &url);
+                output_hard(&cache);
             }
             _ => {}
         };
@@ -210,9 +231,7 @@ fn pull_full(player: &Player) -> PlayerData {
     return PlayerData {
         // hard
         title: metadata.title().unwrap_or("Unknown").to_string(),
-        art: metadata.art_url()
-            .and_then(|url| download_art(url, &player.bus_name_trimmed()))
-            .unwrap_or_default(),
+        art: "".to_string(),
         artists: metadata.artists().unwrap_or_default().join(", ").to_string(),
         player: player.bus_name_trimmed().to_lowercase(),
         duration: metadata.length_in_microseconds().unwrap_or(0),
@@ -241,7 +260,7 @@ fn pull_full(player: &Player) -> PlayerData {
         volume: player.get_volume().unwrap_or(0.0),
         progress: player.get_position_in_microseconds().unwrap_or(0),
 
-        last_art_url: metadata.art_url().unwrap_or("").to_string(),
+        last_art_url: "".to_string(),
     }
 }
 
@@ -249,7 +268,6 @@ fn pull_hard(players: &[Player], cache: &mut HashMap<String, PlayerData>) {
     for player in players {
         let id = player.bus_name_trimmed().to_string();
         let metadata = player.get_metadata().unwrap_or_default();
-        let new_art_url = metadata.art_url().unwrap_or("").to_string();
 
         if let Some(entry) = cache.get_mut(&id) {
             let new_title = metadata.title().unwrap_or("Unknown").to_string();
@@ -286,11 +304,7 @@ fn pull_hard(players: &[Player], cache: &mut HashMap<String, PlayerData>) {
             entry.can_loop = player.can_loop().unwrap_or(false);
             entry.can_volume = player.has_volume().unwrap_or(false);
             entry.can_progress = player.can_seek().unwrap_or(false);
-                    
-            if !new_art_url.is_empty() && new_art_url != entry.last_art_url {
-                entry.art = download_art(&new_art_url, &id).unwrap_or_default();
-                entry.last_art_url = new_art_url.to_string();
-            }
+
         }
     }
 }
@@ -308,6 +322,28 @@ fn pull_soft(players: &[Player], cache: &mut HashMap<String, PlayerData>, force:
             entry.volume = player.get_volume().unwrap_or(entry.volume);
         }
     }
+}
+
+fn request_art(players: &[Player], cache: &mut HashMap<String, PlayerData>, art_tx: &mpsc::Sender<Signal>) {
+    for player in players {
+        let id = player.bus_name_trimmed().to_string();
+        let metadata = player.get_metadata().unwrap_or_default();
+        let new_art_url = metadata.art_url().unwrap_or("").to_string();
+
+        let Some(entry) = cache.get_mut(&id) else { continue; };
+        if new_art_url.is_empty() || new_art_url == entry.last_art_url { continue; };
+
+        entry.last_art_url = new_art_url.clone();
+        let art_tx = art_tx.clone();
+        thread::spawn(move || {
+            if let Some(path) = download_art(&new_art_url, &id) {
+                art_tx.send(Signal::ArtUpdate(id, path)).unwrap();
+            }
+        });
+
+    }
+
+    
 }
 
 fn download_art(url: &str, player_id: &str) -> Option<String> {
@@ -329,6 +365,12 @@ fn download_art(url: &str, player_id: &str) -> Option<String> {
     std::fs::write(&path, bytes).ok()?;
 
     Some(path)
+}
+
+fn update_art(cache: &mut HashMap<String, PlayerData>, player_id: &str, url: &str) {
+    let Some(entry) = cache.get_mut(player_id) else { return; };
+
+    entry.art = url.to_string();
 }
 
 
