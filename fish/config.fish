@@ -36,3 +36,5 @@ abbr -a ytd yt-dlp
 abbr -a pacman 'sudo pacman'
 
 abbr -a restarteww '~/.config/niri/scripts/restart-eww.sh'
+
+abbr -a cwp '~/.config/niri/scripts/change-wallpaper.sh'
