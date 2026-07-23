@@ -268,7 +268,8 @@
                 )
                 (eventbox       :halign "center"
                                 :onscroll "~/.config/eww/scripts/media-control.sh volume {} ${active_media.player}"
-                                :onclick    "setsid -f ~/.config/eww/scripts/menus-manager.sh open-menu media-menu ${screen}"
+                                :onclick        "setsid -f ~/.config/eww/scripts/menus-manager.sh open-menu media-menu ${screen};
+                                                echo ${!reveal_media_menu ? 'media_menu_opened' : 'media_menu_closed'} > /tmp/eww-animation-controller.fifo"
                                 :onrightclick "setsid -f ~/.config/eww/scripts/menus-manager.sh open-menu channels-menu ${screen}"
                                 :onmiddleclick "pkill -USR1 -f 'eww/scripts/target/release/media-watcher'"
                                 

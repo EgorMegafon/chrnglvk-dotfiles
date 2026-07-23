@@ -156,6 +156,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     continue;
                 }
             }
+            Signal::ArtUpdate(id, url) => {
+                update_art(&mut cache, &id, &url);
+                output_hard(&cache);
+                continue;
+            }
             _ => {}
         };
 
@@ -191,10 +196,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             Signal::ArtTick => {
                 request_art(&players, &mut cache, &tx_art_update);
-            }
-            Signal::ArtUpdate(id, url) => {
-                update_art(&mut cache, &id, &url);
-                output_hard(&cache);
             }
             _ => {}
         };

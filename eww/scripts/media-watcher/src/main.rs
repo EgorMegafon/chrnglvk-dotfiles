@@ -1,16 +1,15 @@
+use std::fs::OpenOptions;
 use std::process::{Command, Stdio};
 use std::io::{BufReader, BufRead};
 use std::sync::atomic::AtomicI16;
 use std::sync::Arc;
 use std::sync::atomic::{Ordering};
-use std::thread;
+use std::{thread, writeln};
 use signal_hook::consts::signal::SIGUSR1;
 use signal_hook::iterator::Signals;
 use std::sync::mpsc;
 use mpris::{PlaybackStatus, Player, PlayerFinder};
-use eww_ipc::EwwClient;
-use std::time::Duration;
-use std::sync::atomic::AtomicBool;
+use std::io::Write;
 
 #[derive(Clone, Copy, PartialEq)]
 enum Mode {
@@ -57,22 +56,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 
 
-    let rotate_media_art = Arc::new(AtomicBool::new(false));
-    let rotate_media_art_for_thread = rotate_media_art.clone();
-    let mut media_art_rotation = 0.0;
-    let eww_ipc = EwwClient::new().unwrap();
-    thread::spawn(move || {
-        loop {
-            thread::sleep(Duration::from_millis(50));
-            if rotate_media_art_for_thread.load(Ordering::Relaxed) {
-                media_art_rotation = (media_art_rotation + 0.1) % 100.0;
-                eww_ipc.update(&[("media_art_rotation", media_art_rotation.to_string())]).unwrap_or_default();
-            }
-        }
-    });
-
-
-
 
     // === MAIN THREAD ===
     let player_finder = PlayerFinder::new()?;
@@ -99,7 +82,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     last_media = title;
                     last_status = status;
 
-                    update_metadata(&player, &rotate_media_art);
+                    update_metadata(&player);
                 }
             }
             None => {}
@@ -161,7 +144,7 @@ fn find_player(finder: &PlayerFinder, mode: &Mode) -> Option<Player> {
     return fallback_non_spotify
 }
 
-fn update_metadata(player: &Player, rotate_media_art: &AtomicBool) {
+fn update_metadata(player: &Player) {
     let metdata = player.get_metadata();
     match metdata {
         Ok(data) => {
@@ -177,11 +160,12 @@ fn update_metadata(player: &Player, rotate_media_art: &AtomicBool) {
             match status {
                 PlaybackStatus::Playing => {
                     output_status = "playing";
-                    rotate_media_art.store(true, Ordering::Relaxed);
+                    notify_animator("active_media_playing");
+
                 }
                 _ => {
                     output_status = "paused";
-                    rotate_media_art.store(false, Ordering::Relaxed);
+                    notify_animator("active_media_paused");
                 }
             }
 
@@ -196,4 +180,14 @@ fn update_metadata(player: &Player, rotate_media_art: &AtomicBool) {
         }
         _ => {}
     }
+}
+
+fn notify_animator(state: &str) {
+    if let Ok(mut file) = OpenOptions::new()
+        .write(true)
+        .open("/tmp/eww-animation-controller.fifo") 
+        {
+            let _ = writeln!(file, "{state}");
+        }
+    
 }

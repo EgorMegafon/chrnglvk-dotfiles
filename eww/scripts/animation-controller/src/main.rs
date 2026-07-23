@@ -1,10 +1,12 @@
 use std::sync::mpsc;
-use std::thread;
+use std::{format, thread};
 use std::process::Command;
 use std::fs::OpenOptions;
 use std::time::Duration;
 use std::io::{BufReader, BufRead};
 use eww_ipc::{self, EwwClient};
+use std::sync::Arc;
+use std::sync::{Mutex, Condvar};
 
 enum Signal {
     OpenMediaOutputs,
@@ -13,10 +15,19 @@ enum Signal {
     CloseMediaInputs,
 }
 
+struct SpinArt {
+    media_menu_opened: bool,
+    active_media_playing: bool,
+}
+
 fn main() {
     let (tx, rx) = mpsc::channel();
     let eww = EwwClient::new().unwrap();
+
     
+    let media_state = Arc::new((Mutex::new(SpinArt { media_menu_opened: false, active_media_playing: false }), Condvar::new()));
+    let media_state_fifo = media_state.clone();
+
     let tx_ui_event = tx.clone();
     thread::spawn(move || {
         let path = "/tmp/eww-animation-controller.fifo";
@@ -36,10 +47,51 @@ fn main() {
                     "close_media_outputs" => Signal::CloseMediaoutputs,
                     "open_media_inputs" => Signal::OpenMediaInputs,
                     "close_media_inputs" => Signal::CloseMediaInputs,
+                    
+                    "media_menu_opened" => {
+                        set_state(&media_state_fifo, |s| s.media_menu_opened = true);
+                        continue
+                    }
+                    "media_menu_closed" => {
+                        set_state(&media_state_fifo, |s| s.media_menu_opened = false);
+                        continue
+                    }
+                    "active_media_playing" => {
+                        set_state(&media_state_fifo, |s| s.active_media_playing = true);
+                        continue
+                    }
+                    "active_media_paused" => {
+                        set_state(&media_state_fifo, |s| s.active_media_playing = false);
+                        continue
+                    }
                     _ => continue,
                 };
                 let _ = tx_ui_event.send(signal);
             }
+        }
+    });
+
+
+    
+    
+    let rotate_art = media_state.clone();
+    let eww_for_thread = eww.clone();
+    thread::spawn(move || {
+        let (lock, cvar) = &*rotate_art;
+        let mut media_art_rotation = 0.0;
+        loop {
+            {
+                let mut guard = lock.lock().unwrap();
+                while !(guard.media_menu_opened && guard.active_media_playing) {
+                    guard = cvar.wait(guard).unwrap();
+                }
+            }
+
+            media_art_rotation = (media_art_rotation + 0.1) % 100.0;
+            eww_for_thread
+                .update(&[("media_art_rotation", format!("{media_art_rotation:.2}"))])
+                .unwrap_or_default();
+            thread::sleep(Duration::from_millis(20));
         }
     });
 
@@ -78,4 +130,10 @@ fn tween(var: &'static str, from: f64, to: f64, time_ms: u64, eww: EwwClient) {
         }
         let _ = eww.update(&[(var, to.to_string())]);
     });
+}
+
+fn set_state(state: &Arc<(Mutex<SpinArt>, Condvar)>, f: impl FnOnce(&mut SpinArt)) {
+    let (lock, cvar) = &**state;
+    f(&mut lock.lock().unwrap());
+    cvar.notify_all();
 }
