@@ -19,6 +19,7 @@ spawn-at-startup "spotify"
 spawn-sh-at-startup "vicinae server"
 spawn-sh-at-startup "killall AmneziaVPN 2>/dev/null; sleep 1 && env QT_QPA_PLATFORM=xcb AmneziaVPN &"
 spawn-at-startup "polkit-gnome"
+spawn-sh-at-startup "sunshine &"
 
 
 // === use dms ===
@@ -110,12 +111,19 @@ window-rule {
 
 window-rule {
     match app-id="Alacritty"
+    match app-id="io.missioncenter.MissionCenter"
 
     
 
     background-effect {
         blur true
         xray false
+    }
+    popups {
+        background-effect {
+            blur true
+            xray false
+        }
     }
 
     opacity 0.85
@@ -124,6 +132,7 @@ window-rule {
 window-rule {
     match app-id="Spotify"
     match app-id="org.gnome.Nautilus"
+    
 
 
     background-effect {
@@ -141,6 +150,25 @@ window-rule {
     opacity 0.95
 }
 
+window-rule {
+    match app-id="codium"
+    
+
+
+    background-effect {
+        blur true
+        xray false
+    }
+
+    popups {
+        background-effect {
+            blur true
+            xray false
+        }
+    }
+
+    opacity 0.97
+}
 
 layer-rule {
     match namespace="vicinae"
@@ -154,22 +182,13 @@ layer-rule {
     
 }
 
-/-layer-rule {
-    match namespace="eww-menu"
-    background-effect {
-        blur true
-        xray false
-    }
-
-    opacity 0.5
-}
 
 
 
 
 
 layout {
-    gaps 5
+    gaps 3
     background-color "transparent"
     center-focused-column "never"
     preset-column-widths {
@@ -178,9 +197,9 @@ layout {
         proportion 0.66667
     }
     preset-window-heights {
-        proportion 0.33333
         proportion 0.5
         proportion 0.66667
+        proportion 1.0
     }
     focus-ring {
         width 2
@@ -371,6 +390,15 @@ window-rule {
     open-focused true
 }
 
+window-rule {
+    match app-id="io.missioncenter.MissionCenter"
+
+    default-floating-position x=670 y=700 relative-to="bottom-left"
+
+    min-width 1200
+    min-height 800
+}
+
 
 
 
@@ -382,14 +410,13 @@ binds {
     // === System & Overview ===
     Mod+Tab repeat=false { spawn "niri" "msg" "action" "toggle-overview"; }
     Mod+Shift+Slash { show-hotkey-overlay; }
-    Ctrl+Space { switch-layout "next"; }
+    Mod+Shift+Q { quit; }
 
 
     // === Application Launchers ===
     Mod+Return repeat=false hotkey-overlay-title="Open Terminal" { spawn "alacritty"; }
     Mod+B repeat=false { spawn "zen-browser"; }
     Mod+E repeat=false { spawn "nautilus"; }
-    Mod+M repeat=false { spawn "spotify-launcher"; }
 
 
     // === Vicinae ===
@@ -399,16 +426,16 @@ binds {
 
     // Utils
     Ctrl+Shift+Escape hotkey-overlay-title="Task Manager" {
-        spawn "dms" "ipc" "call" "processlist" "toggle";
+        spawn "missioncenter";
     }
-    Mod+C repeat=false { spawn-sh "killall hyprpicker 2>/dev/null; hyprpicker -aq"; }
+    Mod+Ctrl+C repeat=false { spawn-sh "killall hyprpicker 2>/dev/null; hyprpicker -aq"; }
 
 
     // === Security ===
     Mod+L hotkey-overlay-title="Lock Screen" {
         spawn "dms" "ipc" "call" "lock" "lock";
     }
-    Mod+Shift+Q { quit; }
+    
 
     // === Audio Controls ===
     XF86AudioRaiseVolume allow-when-locked=true {
@@ -428,9 +455,6 @@ binds {
     // === Window Management ===
     Alt+Q repeat=false { close-window; }
     Mod+Q repeat=false { close-window; }
-
-    Mod+F { maximize-column; }
-    Mod+Shift+F { fullscreen-window; }
     
     Mod+T { spawn "~/.config/niri/scripts/toggle-float.sh";  }
     Mod+Shift+T { switch-focus-between-floating-and-tiling; }
@@ -451,52 +475,55 @@ binds {
     Mod+WheelScrollUp { focus-workspace-up; }
 
     // === Whithin Monitor Movement ===
-    Mod+Shift+A { move-column-left-or-to-monitor-left; }
-    Mod+Shift+Left { move-column-left-or-to-monitor-left; }
-    Mod+Shift+MouseForward { move-column-left-or-to-monitor-left; }
-    Mod+Shift+D { move-column-right-or-to-monitor-right; }
-    Mod+Shift+Right { move-column-right-or-to-monitor-right; }
-    Mod+Shift+MouseBack { move-column-right-or-to-monitor-right; }
+    Mod+Shift+A { move-column-left; }
+    Mod+Shift+Left { move-column-left; }
+    Mod+Shift+MouseBack { move-column-left; }
+    Mod+Shift+D { move-column-right; }
+    Mod+Shift+Right { move-column-right; }
+    Mod+Shift+MouseForward { move-column-right; }
     Mod+Shift+W { move-window-up-or-to-workspace-up; }
     Mod+Shift+Up { move-window-up-or-to-workspace-up; }
     Mod+Shift+S { move-window-down-or-to-workspace-down; }
     Mod+Shift+WheelScrollDown { move-window-down-or-to-workspace-down; }
     Mod+Shift+Down { move-window-down-or-to-workspace-down; }
-    Mod+Shift+WheelScrollUp { move-window-down-or-to-workspace-down; }
+    Mod+Shift+WheelScrollUp { move-window-up-or-to-workspace-up; }
 
     // === Consumption Controls ===
-    Mod+Alt+A { consume-or-expel-window-right; }
+    Mod+Alt+D { consume-or-expel-window-right; }
     Mod+Alt+Right { consume-or-expel-window-right; }
     Mod+Alt+MouseForward { consume-or-expel-window-right; }
-    Mod+Alt+D { consume-or-expel-window-left; }
+    Mod+Alt+A { consume-or-expel-window-left; }
     Mod+Alt+Left { consume-or-expel-window-left; }
     Mod+Alt+MouseBack { consume-or-expel-window-left; }
 
     // === Between Monitor Focus ===
-    Mod+Ctrl+A { focus-monitor-right; }
+    Mod+Ctrl+D { focus-monitor-right; }
     Mod+Ctrl+Right { focus-monitor-right; }
     Mod+Ctrl+MouseForward { focus-monitor-right; }
-    Mod+Ctrl+D { focus-monitor-left; }
+    Mod+Ctrl+A { focus-monitor-left; }
     Mod+Ctrl+Left { focus-monitor-left; }
     Mod+Ctrl+MouseBack { focus-monitor-left; }
 
     // === Between Monitor Movement === 
-    Mod+Ctrl+Shift+A { move-column-to-monitor-right; }
+    Mod+Ctrl+Shift+D { move-column-to-monitor-right; }
     Mod+Ctrl+Shift+Right { move-column-to-monitor-right; }
     Mod+Ctrl+Shift+MouseForward { move-column-to-monitor-right; }
-    Mod+Ctrl+Shift+D { move-column-to-monitor-left; }
+    Mod+Ctrl+Shift+A { move-column-to-monitor-left; }
     Mod+Ctrl+Shift+Left { move-column-to-monitor-left; }
     Mod+Ctrl+Shift+MouseBack { move-column-to-monitor-left; }
 
     // === Sizing & Layout ===
     Mod+R { switch-preset-column-width; }
-    Mod+Shift+R { switch-preset-window-height; }
+    Mod+F { maximize-column; }
+    Mod+Shift+F { fullscreen-window; }
 
-    // === Manual Sizing ===
-    Mod+Minus { set-column-width "-10%"; }
-    Mod+Equal { set-column-width "+10%"; }
-    Mod+Shift+Minus { set-window-height "-10%"; }
-    Mod+Shift+Equal { set-window-height "+10%"; }
+    Mod+Z { set-column-width "33%"; }
+    Mod+X { set-column-width "50%"; }
+    Mod+C { set-column-width "67%"; }
+
+    Mod+Shift+Z { set-window-height "33%"; }
+    Mod+Shift+X { set-window-height "50%"; }
+    Mod+Shift+C { set-window-height "100%"; }
 
 
     // === Screenshots ===

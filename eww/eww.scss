@@ -1,5 +1,9 @@
 @use "matugen" as *;
 
+.debug {
+    background-color: green;
+}
+
 .bar {
     background-color: transparent;
     color: $on-background;
@@ -18,6 +22,7 @@
     font-family: "Material Symbols Rounded";
     font-weight: 600;
     color: $on-background;
+    font-size: 20px;
 }
 .icon.filled {
     font-family: "Material Symbols Rounded Filled";
@@ -35,8 +40,7 @@
     padding-left: 15px;
     padding-right: 15px;
 
-    margin-left: 5px;
-    margin-right: 5px;
+    margin-right: 3px;
 }
 .button {
     padding: 0;
@@ -45,6 +49,12 @@
     box-shadow: none;
     text-shadow: none;
     color: $on-background
+}
+.buttons-group {
+    border-style: solid;
+    border-color: $outline;
+    border-width: 2px;
+    border-radius: 10px;
 }
 .menu-area {
     color: $on-background;
@@ -60,7 +70,7 @@
     padding-left: 20px;
     padding-right: 20px;
 
-    margin-top: 10px;
+    margin-top: 5px;
 }
 .scale {
     padding: 0;
@@ -252,12 +262,6 @@
 .media-button.active {
     font-size: 20px;
 }
-.buttons-group {
-    border-style: solid;
-    border-color: $outline;
-    border-width: 2px;
-    border-radius: 10px;
-}
 .scale.media-progress-scale.active {
     margin-top: 10px;
     trough {
@@ -316,7 +320,7 @@
     background-color: transparent;
 }
 .node-card {
-    min-width: 300px;
+    min-width: 200px;
 }
 .icon.node-mute.default {
     font-size: 20px;
@@ -335,6 +339,10 @@
     min-width: 250px;
     padding-left: 10px;
     padding-right: 10px;
+}
+.scale.stream-volume-scale {
+    min-width: 160px;
+    padding-left: 10px;
 }
 .device-name.default {
     color: $primary;
@@ -361,9 +369,152 @@
 
 
 
-// ========== CONTROL BUTTON ==========
+// ========== CONTROL MENU ==========
 .icon.control-button {
     font-size: 20px;
     margin-left: 8px;
     margin-right: 13px;
+}
+.control-menu {
+    background-color: transparent;
+}
+.menu-area.control-menu-area {
+    min-width: 300px;
+}
+.buttons-group.control-menu-buttons {
+    min-width: 80px;
+    padding-right: 5px;
+    padding-left: 5px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+}
+.icon.control-menu-button {
+    font-size: 30px;
+}
+.icon.control-menu-button.inactive {
+    color: $error;
+}
+.control-menu-button-info {
+    font-family: "Monospace Typewriter";
+    color: $primary;
+    font-weight: 700;
+}
+
+.icon.power-menu {
+    font-weight: 800;
+}
+
+// ======= Bluetooth Menu =======
+.bt-device {
+    border-style: solid;
+    border-color: $outline;
+    border-width: 2px;
+    border-radius: 10px;
+
+    padding-left: 7px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+
+    margin-top: 4px;
+
+    min-width: 250px;
+}
+.bt-menu-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: $primary;
+}
+.bt-device-name {
+    font-size: 18px;
+    padding-right: 10px;
+    min-width: 130px;
+}
+.icon.bt-device-icon {
+    font-size: 30px;
+    color: $primary;
+}
+.bt-device-charge {
+    font-size: 15px
+}
+.icon.bt-menu-icon {
+    font-size: 25px;
+    color: $primary;
+}
+.icon.bt-menu-icon.scanning {
+    color: $tertiary;
+}
+.bt-paired-nothing-here {
+    min-width: 250px;
+}
+.bt-device-name.found {
+    min-width: 220px;
+}
+.prompt-question {
+    color: $primary;
+    font-weight: 600;
+    font-size: 15px;
+    min-width: 100px;
+    padding-right: 10px;
+}
+.prompt-input {
+    background-image: none;
+    box-shadow: none;
+    min-height: 0;
+
+
+    background-color: transparent;
+    color: $on-background;
+
+    border-style: solid;
+    border-width: 2px;
+    border-color: $outline;
+    border-radius: 10px;
+
+    padding: 4px 10px;
+    margin: 6px 0;
+
+    font-family: "Monospace Typewriter";
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 15px;
+
+    caret-color: $primary;
+    -gtk-secondary-caret-color: $primary;
+
+    &:focus {
+        border-color: $primary;
+    }
+
+    selection {
+        background-color: $primary;
+        color: $on-primary;
+    }
+}
+.prompt-output {
+    border-style: solid;
+    border-width: 2px;
+    border-color: $outline;
+    border-radius: 10px;
+
+    padding: 4px 10px;
+    margin: 6px 0;
+
+    font-family: "Monospace Typewriter";
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 15px;
+}
+.prompt-confirm {
+    border-style: solid;
+    border-width: 2px;
+    border-color: $outline;
+    border-radius: 10px;
+
+    padding: 4px 10px;
+    margin: 6px 0;
+
+    font-size: 18px;
+    font-weight: 800;
+
+    margin-right: 10px;
 }

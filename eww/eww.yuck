@@ -21,13 +21,30 @@
     "mic_muted":        "\\ue02b",
     "output":           "\\uf4f2",
     "output_muted":     "\\uf4f3",
-    "open_list":        "\\ue313"
+    "open_list":        "\\ue313",
+    "bt_on":            "\\ue1a7",
+    "bt_off":           "\\ue1a9",
+    "ethernet":         "\\ue8be",
+    "wifi_on":          "\\ue63e",
+    "wifi_bad":         "\\uef1b",
+    "wifi_off":         "\\ue648",
+    "power_settings" :  "\\ue8c6",
+    "shutdown":         "\\ue8ac",
+    "reboot":           "\\ue863",
+    "logout":           "\\ue9ba",
+    "suspend":          "\\uef44",
+    "charge":           "\\uec1c",
+    "bt_search":        "\\ue1aa",
+    "disconnect":       "\\uead0",
+    "connect":          "\\ueacf",
+    "close":            "\\ue5cd"
 }')
 
 
 
 (defwindow bar [screen] :class "bar"
-                        :geometry (geometry :x "0%"
+                        :geometry (geometry 
+                                        :x "0%"
                                         :y "0%"
                                         :width "100%"
                                         :height "20px"
@@ -54,9 +71,18 @@
 
                 (all-stuff-listener :visible false)
                 (media-widget :screen screen)
-                (control-button)
+                (control-button :screen screen)
         )
     )
+)
+
+(defwindow deactivation-area :class "deactivation-area"
+            :geometry (geometry :width "100%"
+                                :height "100%")
+            :stacking "fg"
+            :exclusive false
+            :focusable "none"
+        (eventbox :onclick "setsid -f ~/.config/eww/scripts/menus-manager.sh close-menus")
 )
 
 (defvar reveal_media_menu false)
@@ -65,7 +91,7 @@
                 :namespace "eww-menu"
                 :screen screen
                 :geometry (geometry     :anchor "top right"
-                                        :x "5px"
+                                        :x "40px"
                                         :y "0"
                                         :width "200px")
                 :stacking "overlay"
@@ -87,7 +113,7 @@
                 :namespace "eww-menu"
                 :screen screen
                 :geometry (geometry     :anchor "top right"
-                                        :x "5px"
+                                        :x "40px"
                                         :y "0"
                                         :width "200px")
                 :stacking "overlay"
@@ -104,6 +130,29 @@
 
 )
 
+(defvar reveal_control_menu true)
+(defwindow control-menu [screen]
+                :class "control-menu"
+                :namespace "eww-menu"
+                :screen screen
+                :geometry (geometry     :anchor "top right"
+                                        :x "5px"
+                                        :y "0"
+                                        :width "200px")
+                :stacking "overlay"
+                :exclusive false
+                :focusable "ondemand"
+                
+                                
+                (revealer       :transition "slidedown"
+                                :duration "300ms"
+                                :reveal reveal_control_menu
+
+                                (control-menu-content)
+                )   
+
+)
+
 
 (defwidget all-stuff-listener [] 
         (box    :visible false
@@ -112,6 +161,14 @@
         )
         
 )
+
+
+
+
+
+
+
+; ======================== MONITOR ========================
 
 (defvar reveal_resource_usage false)
 (defwidget multibutton []
@@ -183,6 +240,12 @@
     "~/.config/eww/scripts/target/release/resource-watcher")
 
 
+
+
+
+
+; ======================== LAYOUT ========================
+
 (deflisten lang :initial "en"
     "~/.config/eww/scripts/target/release/layout-watcher")
 (defwidget keyboard []
@@ -196,6 +259,12 @@
         )
         
 )
+
+
+
+
+
+; ======================== CLOCK ========================
 
 (defvar reveal_timer false)
 (defwidget clock []
@@ -238,6 +307,12 @@
 )
 
 
+
+
+
+
+; ======================== MPRIS WIDGET ========================
+
 (deflisten active_media :initial '{"title": "nothing...", "artists": "nobody...", "player": "Spotify", "status": "playing"}'
     "~/.config/eww/scripts/target/release/media-watcher")
 (defwidget media-widget [screen]
@@ -267,7 +342,8 @@
                         )
                 )
                 (eventbox       :halign "center"
-                                :onscroll "~/.config/eww/scripts/media-control.sh volume {} ${active_media.player}"
+                                :onscroll       "${reveal_channels_menu ? '~/.config/eww/scripts/default-sink-volume-control.sh {}'
+                                                : '~/.config/eww/scripts/media-control.sh volume {} ${active_media.player}'}"
                                 :onclick        "setsid -f ~/.config/eww/scripts/menus-manager.sh open-menu media-menu ${screen};
                                                 echo ${!reveal_media_menu ? 'media_menu_opened' : 'media_menu_closed'} > /tmp/eww-animation-controller.fifo"
                                 :onrightclick "setsid -f ~/.config/eww/scripts/menus-manager.sh open-menu channels-menu ${screen}"
@@ -293,6 +369,14 @@
     )
 )
 
+
+
+
+
+
+
+; ======================== MPRIS MENU ========================
+
 (deflisten all_media :initial "[]"
     "~/.config/eww/scripts/target/release/media-menu")
 (defvar soft_all_media_updates "{}")
@@ -312,7 +396,7 @@
 
 
 (defvar player_changing_volume "")
-(defvar changed_volume_value 50)
+(defvar changed_volume_value 10)
 (defvar volume_hover_sign "")
 
 (defvar player_changing_progress "")
@@ -462,16 +546,17 @@
                                                 :onhover    "echo soft > /tmp/eww-media-menu.fifo;
                                                         eww update \
                                                         player_changing_volume='${player.player}' \
-                                                        changed_volume_value=${jq(soft_all_media_updates, '."' + player.player + '".volume? // 0') * 100} \
+                                                        changed_volume_value=${jq(soft_all_media_updates, '."' + player.player + '".volume? // 0') * 20} \
                                                         volume_hover_sign=$(date +%s%N)"
                                                 :onhoverlost    "setsid -f ~/.config/eww/scripts/media-menu-slider-release.sh volume"
                                                 (scale  :class "scale media-volume-scale active"
-                                                        :value {player_changing_volume == player.player ? changed_volume_value : jq(soft_all_media_updates, ".\"" + player.player + "\".volume? // 0") * 100}
+                                                        :value {player_changing_volume == player.player ? changed_volume_value : jq(soft_all_media_updates, ".\"" + player.player + "\".volume? // 0") * 20}
                                                         :min 0
-                                                        :max 100
+                                                        :max 20
+                                                        :round-digits 0
                                                         :active {player.can_volume}
                                                         :onchange   "eww update changed_volume_value={};
-                                                                        ~/.config/eww/scripts/media-control.sh volume {} ${player.player} force"
+                                                                        ~/.config/eww/scripts/media-control.sh volume $(({} * 5)) ${player.player} force"
                                                 )
                                 )
                         )
@@ -555,16 +640,17 @@
                                                                         :onhover    "echo soft > /tmp/eww-media-menu.fifo;
                                                                                 eww update \
                                                                                 player_changing_volume='${player.player}' \
-                                                                                changed_volume_value=${jq(soft_all_media_updates, '."' + player.player + '".volume? // 0') * 100} \
+                                                                                changed_volume_value=${jq(soft_all_media_updates, '."' + player.player + '".volume? // 0') * 20} \
                                                                                 volume_hover_sign=$(date +%s%N)"
                                                                         :onhoverlost    "setsid -f ~/.config/eww/scripts/media-menu-slider-release.sh volume"
                                                                         (scale  :class "scale media-volume-scale background"
-                                                                                :value {player_changing_volume == player.player ? changed_volume_value : jq(soft_all_media_updates, ".\"" + player.player + "\".volume? // 0") * 100}
+                                                                                :value {player_changing_volume == player.player ? changed_volume_value : jq(soft_all_media_updates, ".\"" + player.player + "\".volume? // 0") * 20}
                                                                                 :min 0
-                                                                                :max 100
+                                                                                :max 20
+                                                                                :round-digits 0
                                                                                 :active {player.can_volume}
                                                                                 :onchange   "eww update changed_volume_value={};
-                                                                                                ~/.config/eww/scripts/media-control.sh volume {} ${player.player} force"
+                                                                                                ~/.config/eww/scripts/media-control.sh volume $(({} * 5)) ${player.player} force"
                                                                         )
                                                         )
                                                 )
@@ -616,6 +702,13 @@
 )
 
 
+
+
+
+
+
+; ======================== PIPEWIRE ========================
+
 (defvar audio_streams "")
 (defvar audio_inputs "")
 (defvar audio_outputs "")
@@ -640,9 +733,11 @@
 
                 
                 (box    :class "node-slot"
+                        :halign "center"
                         :space-evenly false
                         (device-card :node {jq(audio_outputs, 'map(select(.default == true))[0]')} :type "output" :active true)
                         (eventbox
+                                :halign "center"
                                 :onclick 
                                         "eww update reveal_inactive_outputs=${!reveal_inactive_outputs} &
                                         echo ${!reveal_inactive_outputs ? 'open_media_outputs' : 'close_media_outputs'} > /tmp/eww-animation-controller.fifo"
@@ -688,12 +783,14 @@
 
                 (box    :class "default-node"
                         :space-evenly false
+                        :halign "center"
 
                         (device-card :node {jq(audio_inputs, 'map(select(.default == true))[0]')} :type "input" :active true)
                                 (eventbox
-                                :onclick 
-                                        "eww update reveal_inactive_inputs=${!reveal_inactive_inputs} &
-                                        echo ${!reveal_inactive_inputs ? 'open_media_inputs' : 'close_media_inputs'} > /tmp/eww-animation-controller.fifo"
+                                        :halign "center"
+                                        :onclick 
+                                                "eww update reveal_inactive_inputs=${!reveal_inactive_inputs} &
+                                                echo ${!reveal_inactive_inputs ? 'open_media_inputs' : 'close_media_inputs'} > /tmp/eww-animation-controller.fifo"
                                 (transform
                                         :transform-origin-x "50%"
                                         :transform-origin-y "50%"
@@ -766,10 +863,11 @@
                                         
                         )
                         (scale  :class "scale node-volume-scale ${active ? 'default' : ''}"
-                                :value {pipewire_data[node.id].volume * 100}
+                                :value {pipewire_data[node.id].volume * 20}
                                 :min 0
-                                :max 100
-                                :onchange "~/.config/eww/scripts/device-volume-control.sh ${node.id} volume {}"
+                                :max 20
+                                :round-digits 0
+                                :onchange "~/.config/eww/scripts/device-volume-control.sh ${node.id} volume $(({} * 5))"
                                 
                         )
                 )
@@ -799,7 +897,7 @@
                         :valign "center"
                         :xalign 1.0
                         :yalign 0.5
-                        :limit-width 10
+                        :limit-width 9
                         :text "${group.name}"
                 )  
                 (eventbox       :class "node-mute"
@@ -810,18 +908,28 @@
                                 )
                                 
                 )
-                (scale  :class "scale node-volume-scale"
-                        :value {pipewire_data[group.ids[0]].volume * 100}
+                (scale  :class "scale stream-volume-scale"
+                        :value {pipewire_data[group.ids[0]].volume * 20}
                         :min 0
-                        :max 100
-                        :onchange "setsid -f ~/.config/eww/scripts/app-volume-control.sh volume {} '${group.name}' ${jq(group.ids, 'map(tostring) | join(" ")')}"
+                        :max 20
+                        :round-digits 0
+                        :onchange "setsid -f ~/.config/eww/scripts/app-volume-control.sh volume $(({} * 5)) '${group.name}' ${jq(group.ids, 'map(tostring) | join(" ")')}"
                 )
                 
         )
 )
 
-(defwidget control-button []
-        (eventbox       :class "bar-island"
+
+
+
+; ======================== CONTROLS ========================
+
+(defwidget control-button [screen]
+        (eventbox       
+                :class "bar-island"
+                :onclick "setsid -f ~/.config/eww/scripts/menus-manager.sh open-menu control-menu ${screen}
+                                eww update reveal_control_settings=false"
+                :onscroll "~/.config/eww/scripts/default-sink-volume-control.sh {}"
 
                 
                 (label  :class "icon control-button"
@@ -833,13 +941,405 @@
         )
 )
 
+(deflisten control_control_buttons_info :initial '{"ping": "0ms", "uptime": "0m"}'
+        "~/.config/eww/scripts/target/release/control-watcher")
+(defvar reveal_control_settings true)
+(defvar current_control_menu 1)
+(defvar bt_on false)
+(defwidget control-menu-content []
+        (box    :space-evenly false
+                :orientation "v"
+                (label :visible false :text bt_devices)
+                (box    :class "menu-area control-menu-area"
+                        :space-evenly false
+                        :orientation "h"
+                        :halign "fill"
+                        :spacing 8
+
+                        (box    :class "buttons-group control-menu-buttons"
+                                :space-evenly true
+                                :halign "center"
 
 
-(defwindow deactivation-area :class "deactivation-area"
-            :geometry (geometry :width "100%"
-                                :height "100%")
-            :stacking "fg"
-            :exclusive false
-            :focusable "none"
-        (eventbox :onclick "setsid -f ~/.config/eww/scripts/menus-manager.sh close-menus")
+                                (eventbox
+                                        :onrightclick "eww update reveal_control_settings=${!(current_control_menu == 0 && reveal_control_settings)} current_control_menu=0;
+                                                        ${bt_scanning ? 'echo toggle_scan > /tmp/eww-bluetooth-menu.fifo' : ''}"
+
+                                        (label  :class "icon control-menu-button"
+                                                :text "${icons.wifi_on}"
+                                        )
+                                )
+                                (eventbox
+                                        :onclick "eww update reveal_control_settings=${!(current_control_menu == 0 && reveal_control_settings)} current_control_menu=0;
+                                                        ${bt_scanning ? 'echo toggle_scan > /tmp/eww-bluetooth-menu.fifo' : ''}"
+
+                                        (label  :class "control-menu-button-info"
+                                                :halign "center"
+                                                :text "${control_control_buttons_info.ping}"
+                                        )
+                                )
+                        )
+                        (box    :class "buttons-group control-menu-buttons"
+                                :space-evenly true
+                                :halign "center"
+
+                                (eventbox
+                                        :onrightclick "eww update reveal_control_settings=${!(current_control_menu == 1 && reveal_control_settings)} current_control_menu=1"
+                                        :onclick "echo toggle_bluetooth > /tmp/eww-bluetooth-menu.fifo"
+
+                                        (label  :class "icon control-menu-button ${bt_on ? '' : 'inactive'}"
+                                                :text {bt_on ? "${icons.bt_on}" : "${icons.bt_off}"}
+                                        )
+                                )
+                                (eventbox
+                                        :onclick "eww update reveal_control_settings=${!(current_control_menu == 1 && reveal_control_settings)} current_control_menu=1"
+
+                                        (label  :class "control-menu-button-info"
+                                                :halign "start"
+                                                :text "${arraylength(bt_addresses_connected)} dv"
+                                        )
+                                )
+                        )
+                        (box    :class "buttons-group control-menu-buttons"
+                                :space-evenly true
+                                :halign "center"
+
+                                (eventbox
+                                        :onclick "eww update reveal_control_settings=${!(current_control_menu == 2 && reveal_control_settings)} current_control_menu=2;
+                                                        ${bt_scanning ? 'echo toggle_scan > /tmp/eww-bluetooth-menu.fifo' : ''}"
+
+                                        (label  :class "icon control-menu-button"
+                                                :text "${icons.power_settings}"
+                                        )
+                                )
+                                (eventbox
+                                        :onclick "eww update reveal_control_settings=${!(current_control_menu == 2 && reveal_control_settings)} current_control_menu=2;
+                                                        ${bt_scanning ? 'echo toggle_scan > /tmp/eww-bluetooth-menu.fifo' : ''}"
+
+                                        (label  :class "control-menu-button-info"
+                                                :halign "center"
+                                                :text "${control_control_buttons_info.uptime}"
+                                        )
+                                )
+                        )
+                )
+
+                (revealer
+                        
+                        :transition "slidedown"
+                        :duration "300ms"
+                        :reveal reveal_control_settings
+
+                        (stack  
+                                :selected current_control_menu
+                                :transition "slidedown"
+
+                                (wifi-menu)
+                                (bt-menu)
+                                (power-menu)
+                        )
+                )
+                
+                (box    :class "menu-area control-menu-area"
+                        (wallpaper-menu)
+                )
+        )
+)
+
+(defwidget wifi-menu []
+        (box    :class "menu-area control-menu-area"
+                (label :text "wifi")
+        )
+        
+)
+
+
+(defvar bt_addresses_connected "[]")
+(defvar bt_addresses_paired "[]")
+(defvar bt_addresses_found "[]")
+
+(deflisten bt_devices :default "{}"
+        "~/.config/eww/scripts/target/release/bluetooth-menu")
+
+(defvar bt_scanning false)
+(defwidget bt-menu []
+        (box    :class "menu-area control-menu-area"
+                :orientation "v"
+                :space-evenly false
+                :spacing 16
+                (revealer
+                        :reveal {arraylength(bt_addresses_connected) > 0}
+                        :transition "slidedown"
+                        :duration "300ms"
+
+                        (box 
+                                :space-evenly false
+                                :orientation "v"
+
+                                (label  :class "bt-menu-title"
+                                        :halign "start"
+                                        :text "Connected:"
+                                )
+                                (for address in bt_addresses_connected
+                                        (bt-device-connected :address address)
+                                )
+
+                        )
+                )
+                (box    :space-evenly false
+                        :orientation "h"
+
+                        (box    :space-evenly false
+                                :orientation "v"
+
+                                (label  :class "bt-menu-title"
+                                        :halign "start"
+                                        :text "Paired:"
+                                )
+                                (for address in bt_addresses_paired
+                                        (bt-device-paired :address address)
+                                )
+                                (label  :class "bt-paired-nothing-here"
+                                        :xalign "0.0"
+                                        :visible {!(arraylength(bt_addresses_paired) > 0)}
+                                        :text "nothing here..."
+                                )
+                        )
+                        (eventbox
+                                :hexpand true
+                                :valign "end"
+                                :halign "center"
+                                :onclick "echo toggle_scan > /tmp/eww-bluetooth-menu.fifo"
+                                
+                                (label  :class "icon bt-menu-icon ${bt_scanning ? 'scanning' : ''}"
+                                        :text {icons.bt_search}
+                                )
+                        )
+                )
+                
+                (revealer
+                        :reveal bt_scanning
+                        :transition "slidedown"
+                        :duration "300ms"
+
+                        (box 
+                                :space-evenly false
+                                :orientation "v"
+
+                                (label  :class "bt-menu-title"
+                                        :halign "start"
+                                        :text "Found:"
+                                )
+                                (for address in bt_addresses_found
+                                        (bt-device-found :address address)
+                                )
+                                (label  :visible {!(arraylength(bt_addresses_found) > 0)}
+                                        :xalign "0.0"
+                                        :text "nothing here..."
+                                )
+                        )
+                )
+        )
+)
+(defwidget bt-device-connected [address]
+        (box    :class "bt-device"
+                :orientation "h"
+                :space-evenly false
+
+                (label  :class "bt-device-name"
+                        :lines 2
+                        :limit-width 15
+                        :text "${bt_devices[address].name}"
+                )
+                (box    :hexpand true
+                        :halign "center"
+                        :space-evenly false
+                        :spacing 12
+                        (box
+                                :orientation "h"
+                                :space-evenly false
+
+                                (label  :class "icon filled bt-device-charge"
+                                        :text {icons.charge}
+                                )
+                                (label  :class "bt-device-charge"
+                                        :text "${bt_devices[address].battery}%"
+                                )
+                        )
+                        (box
+                                (eventbox
+                                        :onclick "echo disconnect ${address} > /tmp/eww-bluetooth-menu.fifo"
+
+                                        (label  :class "icon bt-device-icon"
+                                                :text {icons.disconnect}
+                                        )
+                                )
+                                (eventbox
+                                        :onclick "echo forget ${address} > /tmp/eww-bluetooth-menu.fifo"
+                                        
+                                        (label  :class "icon bt-device-icon"
+                                                :text {icons.close}
+                                        )
+                                )
+                        )
+                        
+                )
+                
+        )
+)
+(defwidget bt-device-paired [address]
+        (box    :class "bt-device"
+                :orientation "h"
+                :space-evenly false
+
+                (label  :class "bt-device-name"
+                        :lines 2
+                        :limit-width 15
+                        :text "${bt_devices[address].name}"
+                )
+                (box    :hexpand true
+                        :halign "center"
+                        :space-evenly false
+                        (eventbox
+                                :onclick "echo connect ${address} > /tmp/eww-bluetooth-menu.fifo"
+
+                                (label  :class "icon bt-device-icon"
+                                        :text {icons.connect}
+                                )
+                        )
+                        (eventbox
+                                :onclick "echo forget ${address} > /tmp/eww-bluetooth-menu.fifo"
+                                        
+                                (label  :class "icon bt-device-icon"
+                                        :text {icons.close}
+                                )
+                        )
+                        
+                )
+                
+        )
+)
+(defwidget bt-device-found [address]
+        (box    :class "bt-device"
+                :space-evenly false
+                :orientation "v"
+                
+                (box    :orientation "h"
+                        :space-evenly false
+
+                        (box    
+                                :space-evenly false
+
+                                (label  :class "bt-device-name found"
+                                        :limit-width 20
+                                        :xalign 0.0
+                                        :text "${bt_devices[address].name}"
+                        )
+
+                        )
+                        
+                        (box    :hexpand true
+                                :halign "center"
+                                :space-evenly false
+                                (eventbox
+                                        :onclick "echo pair ${address} > /tmp/eww-bluetooth-menu.fifo"
+
+                                        (label  :class "icon bt-device-icon"
+                                                :text {icons.connect}
+                                        )
+                                )
+                        )
+                )
+                (revealer
+                        :reveal  {bt_devices[address].status == "prompt"}
+                        :transition "slidedown"
+                        :duration "300ms"
+
+                        (box    
+                                :space-evenly false
+                                :orientation "h"
+                                
+                                (label  :class "prompt-question"
+                                        :visible {bt_devices[address].prompt.kind == "input"}
+                                        :xalign 1.0
+                                        :text "Enter PIN:"
+                                )
+                                (input  :class "prompt-input"
+                                        :visible {bt_devices[address].prompt.kind == "input"}
+                                        :onchange "~/.config/eww/scripts/bluetooth-pairing-manager.sh ${address} '{}'"
+                                )
+
+                                (label  :class "prompt-question"
+                                        :visible {bt_devices[address].prompt.kind == "output"}
+                                        :text "Copy PIN:"
+                                )
+                                (label  :class "prompt-output"
+                                        :visible {bt_devices[address].prompt.kind == "output"}
+                                        :text "${bt_devices[address].prompt.value}"
+                                )
+                                
+                                (label  :class "prompt-question"
+                                        :visible {bt_devices[address].prompt.kind == "confirm"}
+                                        :text "Confirm:"
+                                )
+                                (box    :class "prompt-confirm"
+                                        :visible {bt_devices[address].prompt.kind == "confirm"}
+                                        :space-evenly false
+                                        :hexpand true
+                                        :spacing 32
+                                        :halign "center"
+
+                                        (eventbox
+                                                :onclick "echo answer ${address} yes > /tmp/eww-bluetooth-menu.fifo"
+
+                                                (label
+                                                        :text "yep"
+                                                )
+                                        )
+                                        (eventbox
+                                                :onclick "echo answer ${address} no > /tmp/eww-bluetooth-menu.fifo"
+
+                                                (label
+                                                        :text "nah"
+                                                )
+                                        )
+                                )
+                        )
+                        
+                )
+        )
+)
+
+
+(defwidget power-menu []
+        (box    :class "menu-area"
+                :orientation "h"
+                (eventbox
+                        :class "icon power-menu"
+                        :onclick "systemctl poweroff"
+                        (label :text {icons.shutdown})
+                )
+                (eventbox
+                        :class "icon power-menu"
+                        :onclick "systemctl reboot"
+                        (label :text {icons.reboot})
+                )
+                (eventbox
+                        :class "icon power-menu"
+                        :onclick "systemctl suspend"
+                        (label :text {icons.suspend})
+                )
+                (eventbox
+                        :class "icon power-menu"
+                        :onclick "niri msg action quit -s"
+                        (label :text {icons.logout})
+                )
+        )
+)
+
+
+(defwidget wallpaper-menu []
+        (box
+        
+        )
 )

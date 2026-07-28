@@ -1,0 +1,13 @@
+[package]
+name = "bluetooth-menu"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bluer = { version = "0.17.4", features = ["full"] }
+eww-ipc =  { path = "../eww-ipc" }
+futures = "0.3.33"
+serde = "1.0.229"
+serde_json = "1.0.151"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "fs"] }
+tokio-stream = "0.1.19"

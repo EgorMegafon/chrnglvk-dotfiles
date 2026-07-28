@@ -42,9 +42,9 @@ close_other_menus() {
 
     (
         sleep 0.3
-        for id in "${ids[@]}"; do
-            eww close "$id"
-            send_fifo_signal close "${names[$i]}"
+        for idx in "${!ids[@]}"; do
+            eww close "${ids[idx]}"
+            send_fifo_signal close "${names[idx]}"
         done
     ) &
 }

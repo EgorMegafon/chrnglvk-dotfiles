@@ -2,8 +2,6 @@
 
 IMAGE="$1"
 
-awww img "$IMAGE" --namespace backdrop --transition-duration 2 --transition-type wipe --transition-angle 90 --transition-fps 144
+matugen image "$IMAGE" 
 
-sleep 0.5
-
-matugen image "$IMAGE" --prefer saturation
+awww img "$IMAGE" --namespace backdrop --transition-duration 2 --transition-type wipe --transition-angle 208 --transition-fps 144
