@@ -1,7 +1,7 @@
 use std::{collections::{BTreeMap, HashMap}, pin::Pin};
 use bluer::{self, Adapter, AdapterEvent, Address, Device, DeviceEvent, DeviceProperty::{BatteryPercentage, Connected, Name, Paired}, agent::{self, Agent, ReqError}};
 use eww_ipc::EwwClient;
-use futures::{stream::{Stream, StreamExt}};
+use futures::stream::{Stream, StreamExt};
 use serde::Serialize;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio_stream::StreamMap;

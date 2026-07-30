@@ -130,7 +130,7 @@
 
 )
 
-(defvar reveal_control_menu true)
+(defvar reveal_control_menu false)
 (defwindow control-menu [screen]
                 :class "control-menu"
                 :namespace "eww-menu"
@@ -158,6 +158,7 @@
         (box    :visible false
                 (label :text all_media)
                 (label :text pipewire_data)
+                (label :text wallpapers)
         )
         
 )
@@ -943,7 +944,7 @@
 
 (deflisten control_control_buttons_info :initial '{"ping": "0ms", "uptime": "0m"}'
         "~/.config/eww/scripts/target/release/control-watcher")
-(defvar reveal_control_settings true)
+(defvar reveal_control_settings false)
 (defvar current_control_menu 1)
 (defvar bt_on false)
 (defwidget control-menu-content []
@@ -1066,13 +1067,12 @@
         (box    :class "menu-area control-menu-area"
                 :orientation "v"
                 :space-evenly false
-                :spacing 16
                 (revealer
                         :reveal {arraylength(bt_addresses_connected) > 0}
                         :transition "slidedown"
                         :duration "300ms"
 
-                        (box 
+                        (box    :class "bt-devices"
                                 :space-evenly false
                                 :orientation "v"
 
@@ -1088,6 +1088,7 @@
                 )
                 (box    :space-evenly false
                         :orientation "h"
+                        :class "bt-devices"
 
                         (box    :space-evenly false
                                 :orientation "v"
@@ -1181,10 +1182,8 @@
                                                 :text {icons.close}
                                         )
                                 )
-                        )
-                        
+                        )  
                 )
-                
         )
 )
 (defwidget bt-device-paired [address]
@@ -1213,10 +1212,8 @@
                                 (label  :class "icon bt-device-icon"
                                         :text {icons.close}
                                 )
-                        )
-                        
-                )
-                
+                        )  
+                )    
         )
 )
 (defwidget bt-device-found [address]
@@ -1337,9 +1334,56 @@
         )
 )
 
-
+(deflisten wallpapers :initial "[]"
+        "~/.config/eww/scripts/target/release/wallpaper-menu")
 (defwidget wallpaper-menu []
-        (box
+        (scroll :class "wallpaper-scroll"
+                :vscroll true
+                :hscroll false
+                :height 500
+
+                (box    :orientation "v"
+                        :space-evenly false
+                        :spacing 16
+
+                        (for wallpaper in wallpapers
+                                (wallpaper-entry :wallpaper wallpaper)
+                        )
+                )
+        )
         
+        
+)
+(defwidget wallpaper-entry [wallpaper]
+        (box    
+                :orientation "v"
+                :space-evenly false
+                :spacing 8
+
+                (eventbox
+                        :onclick "setsid -f ~/.config/eww/scripts/change-wallpaper.sh ${wallpaper.path} '${wallpaper.colors[0]}'"
+
+                        (box    :class "wallpaper-preview"
+                                :style "background-image: url('${wallpaper.thumb}');"
+                        )
+                )
+                (box    
+                        :orientation "h"
+                        :space-evenly false
+                        :spacing 2
+                        :halign "center"
+                        
+
+                        (for color in {wallpaper.colors}
+                                (eventbox
+
+                                        :onclick "setsid -f ~/.config/eww/scripts/change-wallpaper.sh ${wallpaper.path} '${color}'"
+                                        (box    :class "wallpaper-color"
+                                                :style "background-color: ${color};"
+                                        )
+                                )
+                                
+                        )
+                )
         )
 )

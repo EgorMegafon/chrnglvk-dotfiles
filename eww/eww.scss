@@ -1,4 +1,4 @@
-@use "matugen" as *;
+@use "matugen__" as *;
 
 .debug {
     background-color: green;
@@ -404,6 +404,7 @@
     font-weight: 800;
 }
 
+
 // ======= Bluetooth Menu =======
 .bt-device {
     border-style: solid;
@@ -432,6 +433,9 @@
 .icon.bt-device-icon {
     font-size: 30px;
     color: $primary;
+}
+.bt-devices {
+    margin-bottom: 10px;
 }
 .bt-device-charge {
     font-size: 15px
@@ -517,4 +521,42 @@
     font-weight: 800;
 
     margin-right: 10px;
+}
+
+
+// ======= Wallpaper Menu =======
+.wallpaper-preview {
+    min-width: 200px;
+    min-height: 150px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: 10px;
+}
+.wallpaper-color {
+    min-width: 50px;
+    min-height: 20px;
+
+    border-radius: 5px;
+}
+.wallpaper-scroll {
+    -GtkScrolledWindow-scrollbar-spacing: 0;
+    undershoot.top, undershoot.bottom { background: none; }
+    overshoot.top, overshoot.bottom   { background: none; }
+
+    scrollbar {
+        opacity: 0;
+        min-width: 0;
+        min-height: 0;
+        background: none;
+        border: none;
+
+        slider, trough {
+            min-width: 0;
+            min-height: 0;
+            margin: 0;
+            background: none;
+            border: none;
+        }
+    }
 }
