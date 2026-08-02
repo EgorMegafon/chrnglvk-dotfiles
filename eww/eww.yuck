@@ -64,7 +64,7 @@
         (box    :halign "center"
                 :space-evenly false
                 
-                (clock)
+                (clock :screen screen)
         )
         (box    :halign "end"
                 :space-evenly false
@@ -151,6 +151,28 @@
                                 (control-menu-content)
                 )   
 
+)
+
+(defvar reveal_time_menu true)
+(defwindow time-menu [screen]
+        :class "control-menu"
+                :namespace "eww-menu"
+                :screen screen
+                :geometry (geometry     :anchor "top center"
+                                        :x "0"
+                                        :y "0"
+                                        :width "200px")
+                :stacking "overlay"
+                :exclusive false
+                :focusable "ondemand"
+                
+                                
+                (revealer       :transition "slidedown"
+                                :duration "300ms"
+                                :reveal reveal_time_menu
+
+                                (time-menu-content)
+                )  
 )
 
 
@@ -245,7 +267,7 @@
 
 
 
-; ======================== LAYOUT ========================
+; ======================== KEYBOARD ========================
 
 (deflisten lang :initial "en"
     "~/.config/eww/scripts/target/release/layout-watcher")
@@ -268,10 +290,10 @@
 ; ======================== CLOCK ========================
 
 (defvar reveal_timer false)
-(defwidget clock []
+(defwidget clock [screen]
         (eventbox       :class "bar-island"
                         :halign "center"
-                        :onclick "eww update reveal_timer=${!reveal_timer}"
+                        :onclick "setsid -f ~/.config/eww/scripts/menus-manager.sh open-menu time-menu ${screen}"
                         :onscroll "~/.config/eww/scripts/vertical-scroll.sh {}"
                         :onrightclick "niri msg action toggle-overview"
                         (box    :class "clock"
@@ -305,6 +327,10 @@
                         )
                         
         )
+)
+
+(defwidget time-menu-content []
+        (calendar)
 )
 
 
@@ -1340,11 +1366,11 @@
         (scroll :class "wallpaper-scroll"
                 :vscroll true
                 :hscroll false
-                :height 500
+                :height 360
 
                 (box    :orientation "v"
                         :space-evenly false
-                        :spacing 16
+                        :spacing 8
 
                         (for wallpaper in wallpapers
                                 (wallpaper-entry :wallpaper wallpaper)
@@ -1358,7 +1384,7 @@
         (box    
                 :orientation "v"
                 :space-evenly false
-                :spacing 8
+                :spacing 4
 
                 (eventbox
                         :onclick "setsid -f ~/.config/eww/scripts/change-wallpaper.sh ${wallpaper.path} '${wallpaper.colors[0]}'"
@@ -1370,7 +1396,7 @@
                 (box    
                         :orientation "h"
                         :space-evenly false
-                        :spacing 2
+                        :spacing 4
                         :halign "center"
                         
 
