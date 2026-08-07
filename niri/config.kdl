@@ -126,7 +126,7 @@ window-rule {
         }
     }
 
-    opacity 0.85
+    opacity 0.9
 }
 
 window-rule {
@@ -150,25 +150,6 @@ window-rule {
     opacity 0.95
 }
 
-window-rule {
-    match app-id="codium"
-    
-
-
-    background-effect {
-        blur true
-        xray false
-    }
-
-    popups {
-        background-effect {
-            blur true
-            xray false
-        }
-    }
-
-    opacity 0.97
-}
 
 layer-rule {
     match namespace="vicinae"
@@ -181,10 +162,6 @@ layer-rule {
     opacity 0.85
     
 }
-
-
-
-
 
 
 layout {

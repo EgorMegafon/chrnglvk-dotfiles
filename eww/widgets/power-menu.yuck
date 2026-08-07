@@ -1,0 +1,25 @@
+(defwidget power-menu []
+        (box    :class "menu-area"
+                :orientation "h"
+                (eventbox
+                        :class "icon power-menu"
+                        :onclick "systemctl poweroff"
+                        (label :text {icons.shutdown})
+                )
+                (eventbox
+                        :class "icon power-menu"
+                        :onclick "systemctl reboot"
+                        (label :text {icons.reboot})
+                )
+                (eventbox
+                        :class "icon power-menu"
+                        :onclick "systemctl suspend"
+                        (label :text {icons.suspend})
+                )
+                (eventbox
+                        :class "icon power-menu"
+                        :onclick "niri msg action quit -s"
+                        (label :text {icons.logout})
+                )
+        )
+)

@@ -1,0 +1,211 @@
+; ======================== PIPEWIRE ========================
+
+(defvar audio_streams "")
+(defvar audio_inputs "")
+(defvar audio_outputs "")
+(deflisten pipewire_data :default "[]"
+        "~/.config/eww/scripts/target/release/channels-menu")
+(defwidget channels-menu-content []
+        (box    :orientation "v" 
+                :space-evenly false
+                :class "transparent"
+
+                (pipewire-outputs)
+                (pipewire-inputs)
+                (pipewire-streams)                
+        )
+)
+(defvar reveal_inactive_outputs false)
+(defvar media_outputs_reveal_button_rotation 0.0)
+(defwidget pipewire-outputs []
+       (box     :class "menu-area outputs"
+                :orientation "v"
+                :space-evenly false
+
+                
+                (box    :class "node-slot"
+                        :halign "center"
+                        :space-evenly false
+                        (device-card :node {jq(audio_outputs, 'map(select(.default == true))[0]')} :type "output" :active true)
+                        (eventbox
+                                :halign "center"
+                                :onclick 
+                                        "eww update reveal_inactive_outputs=${!reveal_inactive_outputs} &
+                                        echo ${!reveal_inactive_outputs ? 'open_media_outputs' : 'close_media_outputs'} > /tmp/eww-animation-controller.fifo"
+                                (transform
+                                        :transform-origin-x "50%"
+                                        :transform-origin-y "50%"
+                                        :rotate media_outputs_reveal_button_rotation
+
+                                        (label  :class "icon open-devices"
+                                                :valign "center"
+                                                :halign "center"
+                                                :text "${icons.open_list}"
+                                        )
+                                )
+                                        
+                        )
+                )
+                
+                (revealer       :transition "slidedown"
+                                :duration "300ms"
+                                :reveal reveal_inactive_outputs
+
+                        (box    :class "inactive-nodes"
+                                :orientation "v"
+                                :spacing 5
+
+                                (for node in {jq(audio_outputs, 'map(select(.default == false))')}
+                                        (device-card :node node :type "output" :active false)  
+                                )
+                        )
+                                
+                )
+                
+                
+        ) 
+)
+(defvar reveal_inactive_inputs false)
+(defvar media_inputs_reveal_button_rotation 0.0)
+(defwidget pipewire-inputs []
+        (box    :class "menu-area inputs"
+                :orientation "v"
+                :space-evenly false
+
+                (box    :class "default-node"
+                        :space-evenly false
+                        :halign "center"
+
+                        (device-card :node {jq(audio_inputs, 'map(select(.default == true))[0]')} :type "input" :active true)
+                                (eventbox
+                                        :halign "center"
+                                        :onclick 
+                                                "eww update reveal_inactive_inputs=${!reveal_inactive_inputs} &
+                                                echo ${!reveal_inactive_inputs ? 'open_media_inputs' : 'close_media_inputs'} > /tmp/eww-animation-controller.fifo"
+                                (transform
+                                        :transform-origin-x "50%"
+                                        :transform-origin-y "50%"
+                                        :rotate media_inputs_reveal_button_rotation
+
+                                        (label  :class "icon open-devices"
+                                                :valign "center"
+                                                :halign "center"
+                                                :text "${icons.open_list}"
+                                        )
+                                )           
+                        )
+                )
+
+                
+                (revealer       :transition "slidedown"
+                                :duration "300ms"
+                                :reveal reveal_inactive_inputs
+
+                        (box    :class "inactive-nodes"
+                                :orientation "v"
+                                :space-evenly false
+                                :spacing 5
+
+                                (for node in {jq(audio_inputs, 'map(select(.default == false))')}
+                                        (device-card :node node :type "input" :active false)
+                                )
+
+                        )
+                )
+                
+        )
+)
+(defwidget device-card [node type active]
+        (box    :class "node-card"
+                :orientation "v"
+                :halign "center"
+                :space-evenly false
+
+                (eventbox
+                        :onclick "~/.config/eww/scripts/device-volume-control.sh ${node.id} default"
+
+                        (label  :class "device-name ${active ? 'default' : ''}"
+                                :halign {active ? "start" : "center"}
+                                :valign "center"
+                                :xalign 0.5
+                                :yalign 0.5
+                                :text {node.name}
+                        )
+                )
+                
+                (box    :class "node-controls ${active ? 'default' : ''}"
+                        :orientation "h"
+                        :space-evenly false
+                        :valign "center"
+                        :halign "center"
+
+                        (eventbox       :class "node-mute"
+                                        :onclick "~/.config/eww/scripts/device-volume-control.sh ${node.id} mute"
+                                        (box
+                                                (label  :class "icon node-mute ${active ? 'default filled' : ''} ${pipewire_data[node.id].muted ? 'mute' : ''}"
+                                                        :visible {type == "input"}
+                                                        :text {pipewire_data[node.id].muted ? "${icons.mic_muted}" : "${icons.mic}"}
+                                                )
+                                                (label  :class "icon node-mute ${active ? 'default filled' : ''} ${pipewire_data[node.id].muted ? 'mute' : ''}"
+                                                        :visible {type == "output"}
+                                                        :text {pipewire_data[node.id].muted ? "${icons.output_muted}" : "${icons.output}"}
+                                                )
+                                        )
+                                        
+                        )
+                        (scale  :class "scale node-volume-scale ${active ? 'default' : ''}"
+                                :value {pipewire_data[node.id].volume * 20}
+                                :min 0
+                                :max 20
+                                :round-digits 0
+                                :onchange "~/.config/eww/scripts/device-volume-control.sh ${node.id} volume $(({} * 5))"
+                                
+                        )
+                )
+        )
+)
+
+(defwidget pipewire-streams []
+        (box    :class "menu-area streams"
+                :orientation "v"
+                :spacing 5
+
+                (for group in audio_streams
+                        (box    :class "node-slot"
+                                (stream-card :group group)
+                        )
+                )
+        )
+)
+(defwidget stream-card [group]
+        (box    :class "node-card"
+                :orientation "h"
+                :space-evenly false
+                :halign "center"
+
+                (label  :class "stream-name"
+                        :halign "end"
+                        :valign "center"
+                        :xalign 1.0
+                        :yalign 0.5
+                        :limit-width 9
+                        :text "${group.name}"
+                )  
+                (eventbox       :class "node-mute"
+                                :onclick "~/.config/eww/scripts/app-volume-control.sh mute ${pipewire_data[group.ids[0]].muted ? 0 : 1} ${jq(group.ids, 'map(tostring) | join(" ")')}"
+                                
+                                (label  :class "icon filled node-mute default ${pipewire_data[group.ids[0]].muted ? 'mute' : '' }"
+                                        :text {pipewire_data[group.ids[0]].muted ? "${icons.volume_off}" : "${icons.volume_full}"}
+                                )
+                                
+                )
+                (scale  :class "scale stream-volume-scale"
+                        :value {pipewire_data[group.ids[0]].volume * 20}
+                        :min 0
+                        :max 20
+                        :round-digits 0
+                        :onchange "setsid -f ~/.config/eww/scripts/app-volume-control.sh volume $(({} * 5)) '${group.name}' ${jq(group.ids, 'map(tostring) | join(" ")')}"
+                )
+                
+        )
+)

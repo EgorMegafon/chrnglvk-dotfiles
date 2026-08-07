@@ -1,0 +1,235 @@
+(defvar networks_active "[]")
+(defvar networks_known "[]")
+(defvar networks_found "[]")
+(defvar ethernet "[]")
+
+(deflisten networks_info :default "{}"
+        "~/.config/eww/scripts/target/release/network-menu")
+
+(defwidget wifi-menu []
+        (box    :class "menu-area control-menu-area"
+                :orientation "v"
+                :space-evenly false
+                :spacing 2
+                (revealer
+                        :reveal {arraylength(networks_active) > 0 || arraylength(ethernet) > 0}
+                        :transition "slidedown"
+                        :duration "300ms"
+
+                        (box    :class "network-entries"
+                                :space-evenly false
+                                :orientation "v"
+
+                                (label  :class "bt-menu-title"
+                                        :halign "start"
+                                        :text "Active:" 
+                                )
+                                (for network in networks_active
+                                        (network-active :ssid network)
+                                )
+                                (for network in ethernet
+                                        (network-active :ssid network)
+                                )
+                        )
+                )
+                (revealer
+                        :reveal {!wifi_on}
+                        :transition "slidedown"
+                        :duration "300ms"
+
+                        (label  
+                                :halign "center"
+                                :text "WiFi off..."
+                        )
+                
+                )
+                (revealer
+                        :reveal {wifi_on && arraylength(networks_known) == 0 && arraylength(networks_found) == 0}
+                        :transition "slidedown"
+                        :duration "300ms"
+
+                        (label  
+                                :halign "center"
+                                :text "Searching..."
+                        )
+                
+                )
+                (revealer
+                        :reveal {arraylength(networks_known) > 0}
+                        :transition "slidedown"
+                        :duration "300ms"
+
+                        (box    :class "network-entries"
+                                :space-evenly false
+                                :orientation "v"
+
+                                (label  :class "bt-menu-title"
+                                        :halign "start"
+                                        :text "Known:" 
+                                )
+                                (for network in networks_known
+                                        (network-known :ssid network)
+                                )
+                        )
+                
+                )                 
+                (revealer
+                        :reveal {arraylength(networks_found) > 0}
+                        :transition "slidedown"
+                        :duration "300ms"
+
+                        (box 
+                                :space-evenly false
+                                :orientation "v"
+
+                                (label  :class "bt-menu-title"
+                                        :halign "start"
+                                        :text "Found:"
+                                )
+                                (for network in networks_found
+                                        (network-found :ssid network)
+                                )
+                        )
+                )
+        )   
+)
+(defwidget network-active [ssid]
+        (box    :class "network-entry"
+                :orientation "h"
+                :space-evenly false
+
+                (network-info :ssid ssid)
+                (box    :hexpand true
+                        :halign "end"
+                        :space-evenly false
+                        :spacing 12
+                        :visible {ssid != "Ethernet"}
+                        (box
+                                (eventbox
+                                        :onclick "printf 'disconnect\\t%s\\n' '${ssid}' > /tmp/eww-network-menu.fifo"
+
+                                        (label  :class "icon bt-menu-icon"
+                                                :text {icons.disconnect}
+                                        )
+                                )
+                                (eventbox
+                                        :onclick "printf 'toggle_autoconnect\\t%s\\n' '${ssid}' > /tmp/eww-network-menu.fifo"
+                                        
+                                        (label  :class "icon bt-menu-icon"
+                                                :text {icons.auto}
+                                        )
+                                )
+                                (eventbox
+                                        :onclick "printf 'forget\\t%s\\n' '${ssid}' > /tmp/eww-network-menu.fifo"
+                                        
+                                        (label  :class "icon bt-menu-icon"
+                                                :text {icons.close}
+                                        )
+                                )
+                        )  
+                )
+        )
+)
+(defwidget network-known [ssid]
+        (box    :class "network-entry"
+                :orientation "h"
+                :space-evenly false
+
+                (network-info :ssid ssid)
+                (box    :hexpand true
+                        :halign "end"
+                        :space-evenly false
+                        (eventbox
+                                :onclick "printf 'connect\\t%s\\n' '${ssid}' > /tmp/eww-network-menu.fifo"
+
+                                (label  :class "icon bt-menu-icon"
+                                        :text {icons.connect}
+                                )
+                        )
+                        (eventbox
+                                :onclick "printf 'toggle_autoconnect\\t%s\\n' '${ssid}' > /tmp/eww-network-menu.fifo"
+                                        
+                                (label  :class "icon bt-menu-icon"
+                                        :text {icons.auto}
+                                )
+                        )
+                        (eventbox
+                                :onclick "printf 'forget\\t%s\\n' '${ssid}' > /tmp/eww-network-menu.fifo"
+                                        
+                                (label  :class "icon bt-menu-icon"
+                                        :text {icons.close}
+                                )
+                        ) 
+                )    
+        )
+)
+(defwidget network-found [ssid]
+        (box    :class "network-entry"
+                :space-evenly false
+                :orientation "v"
+                
+                (box    :orientation "h"
+                        :space-evenly false
+
+                        (network-info :ssid ssid)
+                        (box    :hexpand true
+                                :halign "end"
+                                :orientation "h"
+                                :space-evenly false
+                                (eventbox
+                                        :onclick "printf '%s\\t%s\\n' '${networks_info[ssid].entering_password == 'true' ? 'cancel_password' : 'connect'}' '${ssid}' > /tmp/eww-network-menu.fifo"
+
+                                        (label  :class "icon bt-menu-icon"
+                                                :text {networks_info[ssid].entering_password == "true" ? icons.close : icons.connect}
+                                        )
+                                )
+                        )
+                )
+                (revealer
+                        :reveal {networks_info[ssid].entering_password == "true"}
+                        :transition "slidedown"
+                        :duration "200ms"
+
+                        (box    
+                                :space-evenly false
+                                :orientation "h"
+                                :halign "center"
+                                
+                                (label  :class "wifi-password-prompt"
+                                        :xalign 1.0
+                                        :text "Password:"
+                                )
+                                (input  :class "wifi-password-input"
+                                        :password true
+                                        :onaccept "printf 'password\\t%s\\t%s\\n' '${ssid}' '{}' > /tmp/eww-network-menu.fifo"
+                                )
+                        )
+                        
+                )
+        )
+)
+(defwidget network-info [ssid]
+        (box    
+                :orientation "h"
+                :space-evenly false
+                :spacing 10
+
+                (label  :class "icon"
+                        :visible {ssid == "Ethernet"}
+                        :text {icons.ethernet}
+                )
+                (label  :class "icon"
+                        :visible {ssid != "Ethernet"}
+                        :text {networks_info[ssid].strength > 67 ? 
+                                "${icons.wifi_3}" : networks_info[ssid].strength > 50 ? 
+                                "${icons.wifi_2}" : networks_info[ssid].strength > 10 ?
+                                "${icons.wifi_1}" : "${icons.wifi_0}"}
+                )
+                (label  :class "network-name"
+                        :limit-width 17
+                        :xalign 0.0
+                        :text {ssid}
+                )
+        )
+
+)

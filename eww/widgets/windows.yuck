@@ -1,0 +1,132 @@
+(defwindow bar [screen] :class "bar"
+                        :geometry (geometry 
+                                        :x "0%"
+                                        :y "0%"
+                                        :width "100%"
+                                        :height "20px"
+                                        :anchor "top center")
+                        :stacking "fg"
+                        :exclusive true
+                        :focusable "none"
+                        :windowtype "toolbar"
+                        :wm-ignore false
+    (centerbox 
+        (box    :halign "start" 
+                :space-evenly false
+
+                (multibutton)
+                (keyboard)
+        )
+        (box    :halign "center"
+                :space-evenly false
+                
+                (clock :screen screen)
+        )
+        (box    :halign "end"
+                :space-evenly false
+
+                (all-stuff-listener :visible false)
+                (media-widget :screen screen)
+                (control-button :screen screen)
+        )
+    )
+)
+
+(defwindow deactivation-area :class "deactivation-area"
+            :geometry (geometry :width "100%"
+                                :height "100%")
+            :stacking "fg"
+            :exclusive false
+            :focusable "none"
+        (eventbox :onclick "setsid -f ~/.config/eww/scripts/menus-manager.sh close-menus")
+)
+
+(defvar reveal_media_menu false)
+(defwindow media-menu [screen]
+                :class "media-menu"
+                :namespace "eww-menu"
+                :screen screen
+                :geometry (geometry     :anchor "top right"
+                                        :x "40px"
+                                        :y "0"
+                                        :width "200px")
+                :stacking "overlay"
+                :exclusive false
+                :focusable "none"
+                
+                                
+                (revealer       :transition "slidedown"
+                                :duration "300ms"
+                                :reveal reveal_media_menu
+
+                                (media-menu-content)
+                )
+)
+
+(defvar reveal_channels_menu false)
+(defwindow channels-menu [screen]
+                :class "channels-menu"
+                :namespace "eww-menu"
+                :screen screen
+                :geometry (geometry     :anchor "top right"
+                                        :x "40px"
+                                        :y "0"
+                                        :width "200px")
+                :stacking "overlay"
+                :exclusive false
+                :focusable "none"
+                
+                                
+                (revealer       :transition "slidedown"
+                                :duration "300ms"
+                                :reveal reveal_channels_menu
+
+                                (channels-menu-content)
+                )         
+
+)
+
+(defvar reveal_control_menu false)
+(defwindow control-menu [screen]
+                :class "control-menu"
+                :namespace "eww-menu"
+                :screen screen
+                :geometry (geometry     :anchor "top right"
+                                        :x "5px"
+                                        :y "0"
+                                        :width "200px")
+                :stacking "overlay"
+                :exclusive false
+                :focusable "ondemand"
+                
+                                
+                (revealer       :transition "slidedown"
+                                :duration "300ms"
+                                :reveal reveal_control_menu
+
+                                (control-menu-content)
+                )   
+
+)
+
+(defvar reveal_time_menu true)
+(defwindow time-menu [screen]
+        :class "control-menu"
+                :namespace "eww-menu"
+                :screen screen
+                :geometry (geometry     :anchor "top center"
+                                        :x "0"
+                                        :y "0"
+                                        :width "200px")
+                :stacking "overlay"
+                :exclusive false
+                :focusable "ondemand"
+                
+                                
+                (revealer       :transition "slidedown"
+                                :duration "300ms"
+                                :reveal reveal_time_menu
+
+                                (time-menu-content)
+                )  
+)

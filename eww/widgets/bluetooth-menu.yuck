@@ -1,0 +1,251 @@
+(defvar bt_addresses_connected "[]")
+(defvar bt_addresses_paired "[]")
+(defvar bt_addresses_found "[]")
+
+(deflisten bt_devices :default "{}"
+        "~/.config/eww/scripts/target/release/bluetooth-menu")
+
+(defvar bt_scanning false)
+(defwidget bt-menu []
+        (box    :class "menu-area control-menu-area"
+                :orientation "v"
+                :space-evenly false
+                (revealer
+                        :reveal {arraylength(bt_addresses_connected) > 0}
+                        :transition "slidedown"
+                        :duration "300ms"
+
+                        (box    :class "bt-devices"
+                                :space-evenly false
+                                :orientation "v"
+
+                                (label  :class "bt-menu-title"
+                                        :halign "start"
+                                        :text "Connected:"
+                                )
+                                (for address in bt_addresses_connected
+                                        (bt-device-connected :address address)
+                                )
+
+                        )
+                )
+                (box    :space-evenly false
+                        :orientation "h"
+                        :class "bt-devices"
+
+                        (box    :space-evenly false
+                                :orientation "v"
+
+                                (label  :class "bt-menu-title"
+                                        :halign "start"
+                                        :text "Paired:"
+                                )
+                                (for address in bt_addresses_paired
+                                        (bt-device-paired :address address)
+                                )
+                                (label  :class "bt-paired-nothing-here"
+                                        :xalign "0.0"
+                                        :visible {!(arraylength(bt_addresses_paired) > 0)}
+                                        :text "nothing here..."
+                                )
+                        )
+                        (eventbox
+                                :hexpand true
+                                :valign "end"
+                                :halign "center"
+                                :onclick "echo toggle_scan > /tmp/eww-bluetooth-menu.fifo"
+                                
+                                (label  :class "icon bt-menu-icon ${bt_scanning ? 'scanning' : ''}"
+                                        :text {icons.bt_search}
+                                )
+                        )
+                )
+                
+                (revealer
+                        :reveal bt_scanning
+                        :transition "slidedown"
+                        :duration "300ms"
+
+                        (box 
+                                :space-evenly false
+                                :orientation "v"
+
+                                (label  :class "bt-menu-title"
+                                        :halign "start"
+                                        :text "Found:"
+                                )
+                                (for address in bt_addresses_found
+                                        (bt-device-found :address address)
+                                )
+                                (label  :visible {!(arraylength(bt_addresses_found) > 0)}
+                                        :xalign "0.0"
+                                        :text "nothing here..."
+                                )
+                        )
+                )
+        )
+)
+(defwidget bt-device-connected [address]
+        (box    :class "bt-device"
+                :orientation "h"
+                :space-evenly false
+
+                (label  :class "bt-device-name"
+                        :lines 2
+                        :limit-width 15
+                        :text "${bt_devices[address].name}"
+                )
+                (box    :hexpand true
+                        :halign "center"
+                        :space-evenly false
+                        :spacing 12
+                        (box
+                                :orientation "h"
+                                :space-evenly false
+
+                                (label  :class "icon filled bt-device-charge"
+                                        :text {icons.charge}
+                                )
+                                (label  :class "bt-device-charge"
+                                        :text "${bt_devices[address].battery}%"
+                                )
+                        )
+                        (box
+                                (eventbox
+                                        :onclick "echo disconnect ${address} > /tmp/eww-bluetooth-menu.fifo"
+
+                                        (label  :class "icon bt-device-icon"
+                                                :text {icons.disconnect}
+                                        )
+                                )
+                                (eventbox
+                                        :onclick "echo forget ${address} > /tmp/eww-bluetooth-menu.fifo"
+                                        
+                                        (label  :class "icon bt-device-icon"
+                                                :text {icons.close}
+                                        )
+                                )
+                        )  
+                )
+        )
+)
+(defwidget bt-device-paired [address]
+        (box    :class "bt-device"
+                :orientation "h"
+                :space-evenly false
+
+                (label  :class "bt-device-name"
+                        :lines 2
+                        :limit-width 15
+                        :text "${bt_devices[address].name}"
+                )
+                (box    :hexpand true
+                        :halign "center"
+                        :space-evenly false
+                        (eventbox
+                                :onclick "echo connect ${address} > /tmp/eww-bluetooth-menu.fifo"
+
+                                (label  :class "icon bt-device-icon"
+                                        :text {icons.connect}
+                                )
+                        )
+                        (eventbox
+                                :onclick "echo forget ${address} > /tmp/eww-bluetooth-menu.fifo"
+                                        
+                                (label  :class "icon bt-device-icon"
+                                        :text {icons.close}
+                                )
+                        )  
+                )    
+        )
+)
+(defwidget bt-device-found [address]
+        (box    :class "bt-device"
+                :space-evenly false
+                :orientation "v"
+                
+                (box    :orientation "h"
+                        :space-evenly false
+
+                        (box    
+                                :space-evenly false
+
+                                (label  :class "bt-device-name found"
+                                        :limit-width 20
+                                        :xalign 0.0
+                                        :text "${bt_devices[address].name}"
+                        )
+
+                        )
+                        
+                        (box    :hexpand true
+                                :halign "center"
+                                :space-evenly false
+                                (eventbox
+                                        :onclick "echo pair ${address} > /tmp/eww-bluetooth-menu.fifo"
+
+                                        (label  :class "icon bt-device-icon"
+                                                :text {icons.connect}
+                                        )
+                                )
+                        )
+                )
+                (revealer
+                        :reveal  {bt_devices[address].status == "prompt"}
+                        :transition "slidedown"
+                        :duration "300ms"
+
+                        (box    
+                                :space-evenly false
+                                :orientation "h"
+                                
+                                (label  :class "prompt-question"
+                                        :visible {bt_devices[address].prompt.kind == "input"}
+                                        :xalign 1.0
+                                        :text "Enter PIN:"
+                                )
+                                (input  :class "prompt-input"
+                                        :visible {bt_devices[address].prompt.kind == "input"}
+                                        :onchange "~/.config/eww/scripts/bluetooth-pairing-manager.sh ${address} '{}'"
+                                )
+
+                                (label  :class "prompt-question"
+                                        :visible {bt_devices[address].prompt.kind == "output"}
+                                        :text "Copy PIN:"
+                                )
+                                (label  :class "prompt-output"
+                                        :visible {bt_devices[address].prompt.kind == "output"}
+                                        :text "${bt_devices[address].prompt.value}"
+                                )
+                                
+                                (label  :class "prompt-question"
+                                        :visible {bt_devices[address].prompt.kind == "confirm"}
+                                        :text "Confirm:"
+                                )
+                                (box    :class "prompt-confirm"
+                                        :visible {bt_devices[address].prompt.kind == "confirm"}
+                                        :space-evenly false
+                                        :hexpand true
+                                        :spacing 32
+                                        :halign "center"
+
+                                        (eventbox
+                                                :onclick "echo answer ${address} yes > /tmp/eww-bluetooth-menu.fifo"
+
+                                                (label
+                                                        :text "yep"
+                                                )
+                                        )
+                                        (eventbox
+                                                :onclick "echo answer ${address} no > /tmp/eww-bluetooth-menu.fifo"
+
+                                                (label
+                                                        :text "nah"
+                                                )
+                                        )
+                                )
+                        )
+                        
+                )
+        )
+)

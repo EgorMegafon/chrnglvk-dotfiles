@@ -1,0 +1,53 @@
+(deflisten wallpapers :initial "[]"
+        "~/.config/eww/scripts/target/release/wallpaper-menu")
+(defwidget wallpaper-menu []
+        (scroll :class "wallpaper-scroll"
+                :vscroll true
+                :hscroll false
+                :height 360
+
+                (box    :orientation "v"
+                        :space-evenly false
+                        :spacing 8
+
+                        (for wallpaper in wallpapers
+                                (wallpaper-entry :wallpaper wallpaper)
+                        )
+                )
+        )
+        
+        
+)
+(defwidget wallpaper-entry [wallpaper]
+        (box    
+                :orientation "v"
+                :space-evenly false
+                :spacing 4
+
+                (eventbox
+                        :onclick "setsid -f ~/.config/eww/scripts/change-wallpaper.sh ${wallpaper.path} '${wallpaper.colors[0]}'"
+
+                        (box    :class "wallpaper-preview"
+                                :style "background-image: url('${wallpaper.thumb}');"
+                        )
+                )
+                (box    
+                        :orientation "h"
+                        :space-evenly false
+                        :spacing 4
+                        :halign "center"
+                        
+
+                        (for color in {wallpaper.colors}
+                                (eventbox
+
+                                        :onclick "setsid -f ~/.config/eww/scripts/change-wallpaper.sh ${wallpaper.path} '${color}'"
+                                        (box    :class "wallpaper-color"
+                                                :style "background-color: ${color};"
+                                        )
+                                )
+                                
+                        )
+                )
+        )
+)

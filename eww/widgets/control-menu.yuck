@@ -1,0 +1,130 @@
+; ======================== CONTROLS ========================
+
+(defwidget control-button [screen]
+        (eventbox       
+                :class "bar-island"
+                :onclick "setsid -f ~/.config/eww/scripts/menus-manager.sh open-menu control-menu ${screen}
+                                eww update reveal_control_settings=false"
+                :onscroll "~/.config/eww/scripts/default-sink-volume-control.sh {}"
+
+                
+                (label  :class "icon control-button"
+                        :halign "center"
+                        :xalign 0.5
+                        :text "󰣇"
+                )
+                
+        )
+)
+
+(deflisten control_control_buttons_info :initial '{"ping": "0ms", "uptime": "0m"}'
+        "~/.config/eww/scripts/target/release/control-watcher")
+(defvar reveal_control_settings false)
+(defvar current_control_menu 1)
+(defvar bt_on false)
+(defvar wifi_on false)
+(defwidget control-menu-content []
+        (box    :space-evenly false
+                :orientation "v"
+                (label :visible false :text bt_devices)
+                (label :visible false :text networks_info)
+                (box    :class "menu-area control-menu-area"
+                        :space-evenly false
+                        :orientation "h"
+                        :halign "fill"
+                        :spacing 8
+
+                        (box    :class "buttons-group control-menu-buttons"
+                                :space-evenly true
+                                :halign "center"
+
+
+                                (eventbox
+                                        :onclick "printf 'toggle_wifi\\n' > /tmp/eww-network-menu.fifo"
+                                        :onrightclick "eww update reveal_control_settings=${!(current_control_menu == 0 && reveal_control_settings)} current_control_menu=0;
+                                                        ${bt_scanning ? 'echo toggle_scan > /tmp/eww-bluetooth-menu.fifo' : ''}"
+
+                                        (label  :class "icon control-menu-button"
+                                                :text {arraylength(ethernet) > 0 ? 
+                                                        "${icons.ethernet}" : networks_info[networks_active[0]].strength > 67 ? 
+                                                        "${icons.wifi_3}" : networks_info[networks_active[0]].strength > 50 ? 
+                                                        "${icons.wifi_2}" : networks_info[networks_active[0]].strength > 10 ?
+                                                        "${icons.wifi_1}" : "${icons.wifi_0}"}
+                                        )
+                                )
+                                (eventbox
+                                        :onclick "eww update reveal_control_settings=${!(current_control_menu == 0 && reveal_control_settings)} current_control_menu=0;
+                                                        ${bt_scanning ? 'echo toggle_scan > /tmp/eww-bluetooth-menu.fifo' : ''}"
+
+                                        (label  :class "control-menu-button-info"
+                                                :halign "center"
+                                                :text "${control_control_buttons_info.ping}"
+                                        )
+                                )
+                        )
+                        (box    :class "buttons-group control-menu-buttons"
+                                :space-evenly true
+                                :halign "center"
+
+                                (eventbox
+                                        :onrightclick "eww update reveal_control_settings=${!(current_control_menu == 1 && reveal_control_settings)} current_control_menu=1"
+                                        :onclick "echo toggle_bluetooth > /tmp/eww-bluetooth-menu.fifo"
+
+                                        (label  :class "icon control-menu-button ${bt_on ? '' : 'inactive'}"
+                                                :text {bt_on ? "${icons.bt_on}" : "${icons.bt_off}"}
+                                        )
+                                )
+                                (eventbox
+                                        :onclick "eww update reveal_control_settings=${!(current_control_menu == 1 && reveal_control_settings)} current_control_menu=1"
+
+                                        (label  :class "control-menu-button-info"
+                                                :halign "start"
+                                                :text "${arraylength(bt_addresses_connected)} dv"
+                                        )
+                                )
+                        )
+                        (box    :class "buttons-group control-menu-buttons"
+                                :space-evenly true
+                                :halign "center"
+
+                                (eventbox
+                                        :onclick "eww update reveal_control_settings=${!(current_control_menu == 2 && reveal_control_settings)} current_control_menu=2;
+                                                        ${bt_scanning ? 'echo toggle_scan > /tmp/eww-bluetooth-menu.fifo' : ''}"
+
+                                        (label  :class "icon control-menu-button"
+                                                :text "${icons.power_settings}"
+                                        )
+                                )
+                                (eventbox
+                                        :onclick "eww update reveal_control_settings=${!(current_control_menu == 2 && reveal_control_settings)} current_control_menu=2;
+                                                        ${bt_scanning ? 'echo toggle_scan > /tmp/eww-bluetooth-menu.fifo' : ''}"
+
+                                        (label  :class "control-menu-button-info"
+                                                :halign "center"
+                                                :text "${control_control_buttons_info.uptime}"
+                                        )
+                                )
+                        )
+                )
+
+                (revealer
+                        
+                        :transition "slidedown"
+                        :duration "300ms"
+                        :reveal reveal_control_settings
+
+                        (stack  
+                                :selected current_control_menu
+                                :transition "slidedown"
+
+                                (wifi-menu)
+                                (bt-menu)
+                                (power-menu)
+                        )
+                )
+                
+                (box    :class "menu-area control-menu-area"
+                        (wallpaper-menu)
+                )
+        )
+)
