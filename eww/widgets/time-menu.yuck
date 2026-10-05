@@ -1,3 +1,15 @@
 (defwidget time-menu-content []
-        (calendar)
+        (box    :class "menu-area"
+                :orientation "v"
+                :space-evenly false
+
+                (box    :class "buttons-group"
+                        (calendar       
+                                :class "time-menu-calendar"
+                                :show-heading false
+                                :show-week-numbers false
+                                :show-details false
+                        )
+                )
+        )
 )

@@ -19,7 +19,6 @@ spawn-at-startup "spotify"
 spawn-sh-at-startup "vicinae server"
 spawn-sh-at-startup "killall AmneziaVPN 2>/dev/null; sleep 1 && env QT_QPA_PLATFORM=xcb AmneziaVPN &"
 spawn-at-startup "polkit-gnome"
-spawn-sh-at-startup "sunshine &"
 
 
 // === use dms ===
@@ -31,7 +30,9 @@ spawn-at-startup "awww-daemon" "--namespace" "backdrop"
 spawn-at-startup "~/.config/niri/scripts/restart-eww.sh"
 spawn-sh-at-startup "~/.local/bin/noid"
 
-// = my scripts =
+// === keyboard stuff ===
+spawn-at-startup "fcitx5"
+spawn-sh-at-startup "sleep 5 && setxkbmap -layout us,ru -option '' -option caps:none"
 
 
 
@@ -47,7 +48,7 @@ output "DP-1" {
 // Asus
 output "DP-2" {
     mode "2560x1440@74.925"
-    position x=-1440 y=0
+    position x=-1440 y=-350
 }
 
 
@@ -90,7 +91,6 @@ input {
 
 cursor {
     xcursor-theme "Bibata-Modern-Ice"
-
 }
 
 // blur
@@ -165,7 +165,7 @@ layer-rule {
 
 
 layout {
-    gaps 3
+    gaps 5
     background-color "transparent"
     center-focused-column "never"
     preset-column-widths {
@@ -207,14 +207,14 @@ overview {
 }
 
 environment {
-  XDG_CURRENT_DESKTOP "niri"
-  QT_QPA_PLATFORM "wayland"
-  ELECTRON_OZONE_PLATFORM_HINT "auto"
-  QT_QPA_PLATFORMTHEME "gtk3"
-  QT_QPA_PLATFORMTHEME_QT6 "gtk3"
-  TERMINAL "alacritty"
-  XCURSOR_THEME "Bibata-Modern-Ice"
-  XCURSOR_SIZE "24"
+    XDG_CURRENT_DESKTOP "niri"
+    QT_QPA_PLATFORM "wayland"
+    ELECTRON_OZONE_PLATFORM_HINT "auto"
+    QT_QPA_PLATFORMTHEME "qt5ct"
+    QT_QPA_PLATFORMTHEME_QT6 "qt6ct"
+    TERMINAL "alacritty"
+    XCURSOR_THEME "Bibata-Modern-Ice"
+    XCURSOR_SIZE "24"
 }
 hotkey-overlay {
     skip-at-startup
@@ -331,6 +331,8 @@ window-rule {
     match app-id="affinity.exe"
     match app-id="org.godotengine.ProjectManager"
     match app-id="jetbrains-rider"
+    match app-id="krita"
+    match app-id="resolve"
 
     open-on-workspace "Work"
 }
@@ -365,6 +367,12 @@ window-rule {
     exclude app-id="steam"
 
     open-focused true
+}
+
+window-rule {
+    match at-startup=true
+
+    open-focused false
 }
 
 window-rule {

@@ -1,5 +1,5 @@
                                                   
-                       /o                         
+                      $1 /o                         
                       -oos                        
                      -oooo/                       
                      sooooo/                      
@@ -12,8 +12,8 @@
              -ooooooo.     /ooooss-               
             +oooo/+-.      .-+/sooos              
            /o/-.                 .+ss.            
-          ..                         .          .+
-.            /.                 ss           -+soo
+          ..                         .          $2.+
+$2.            /.                 ss           -+soo
 oo/+.       -o+                 /o+     .+/soooooo
 ooooooos+.  /oo+-               soo+..-/oooooooooo
 oooooooooos/oooo///.           -osoooooooooooooooo

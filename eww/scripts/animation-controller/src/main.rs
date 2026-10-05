@@ -1,3 +1,4 @@
+use std::os::unix::fs::FileTypeExt;
 use std::sync::mpsc;
 use std::{format, thread};
 use std::process::Command;
@@ -31,7 +32,7 @@ fn main() {
     let tx_ui_event = tx.clone();
     thread::spawn(move || {
         let path = "/tmp/eww-animation-controller.fifo";
-        Command::new("mkfifo").arg(path).status().ok();
+        ensure_fifo(path);
 
         loop {
             let file = match OpenOptions::new().read(true).open(path) {
@@ -136,4 +137,13 @@ fn set_state(state: &Arc<(Mutex<SpinArt>, Condvar)>, f: impl FnOnce(&mut SpinArt
     let (lock, cvar) = &**state;
     f(&mut lock.lock().unwrap());
     cvar.notify_all();
+}
+
+fn ensure_fifo(path: &str) {
+    match std::fs::metadata(path) {
+        Ok(m) if m.file_type().is_fifo() => return,
+        Ok(_) => { let _ = std::fs::remove_file(path); }
+        Err(_) => {}
+    }
+    let _ = Command::new("mkfifo").arg(path).status();
 }

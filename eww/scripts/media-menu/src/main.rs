@@ -10,6 +10,7 @@ use dbus::blocking::Connection;
 use std::process::Command;
 use std::io::{BufRead, BufReader, Read};
 use std::fs::OpenOptions;
+use std::os::unix::fs::FileTypeExt;
 
 
 
@@ -109,7 +110,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let tx_user_event = tx.clone();
     thread::spawn(move || {
         let path = "/tmp/eww-media-menu.fifo";
-        Command::new("mkfifo").arg(path).status().ok();
+        ensure_fifo(path);
 
         loop {
             let file = match OpenOptions::new().read(true).open(path) {
@@ -405,4 +406,13 @@ fn output_soft(cache: &HashMap<String, PlayerData>, eww_ipc: &EwwClient) {
     let json = serde_json::to_string(&output_values).unwrap();
 
     eww_ipc.update(&[("soft_all_media_updates", json)]).unwrap();
+}
+
+fn ensure_fifo(path: &str) {
+    match std::fs::metadata(path) {
+        Ok(m) if m.file_type().is_fifo() => return,
+        Ok(_) => { let _ = std::fs::remove_file(path); }
+        Err(_) => {}
+    }
+    let _ = Command::new("mkfifo").arg(path).status();
 }

@@ -1,7 +1,7 @@
 (deflisten wallpapers :initial "[]"
         "~/.config/eww/scripts/target/release/wallpaper-menu")
 (defwidget wallpaper-menu []
-        (scroll :class "wallpaper-scroll"
+        (scroll :class "scroll"
                 :vscroll true
                 :hscroll false
                 :height 360

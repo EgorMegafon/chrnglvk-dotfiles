@@ -64,7 +64,7 @@ if [[ "$ACTION" == "open-menu" ]]; then
     else
         close_other_menus
         eww open "$NAME" --screen "$SCREEN" --arg screen="$SCREEN"
-        #eww open-many deactivation-area:deactivation-area-0 deactivation-area:deactivation-area-1 --arg deactivation-area-0:screen=0 --arg deactivation-area-1:screen=1
+        eww open-many deactivation-area:deactivation-area-0 deactivation-area:deactivation-area-1 --arg deactivation-area-0:screen=0 --arg deactivation-area-1:screen=1
         eww update reveal_"${NAME//-/_}"=true 2>/dev/null
         send_fifo_signal open "$NAME"
     fi

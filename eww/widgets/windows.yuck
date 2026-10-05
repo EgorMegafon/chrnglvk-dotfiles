@@ -111,7 +111,7 @@
 
 (defvar reveal_time_menu true)
 (defwindow time-menu [screen]
-        :class "control-menu"
+                :class "time-menu"
                 :namespace "eww-menu"
                 :screen screen
                 :geometry (geometry     :anchor "top center"

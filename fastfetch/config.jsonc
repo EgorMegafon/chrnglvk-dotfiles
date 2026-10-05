@@ -3,12 +3,15 @@
   "logo": {
     "source": "~/.config/fastfetch/archovoe-ascii-art.txt",
     "type": "file",
-    "color": {"1": "bright_cyan"}
+    "color": {
+      "1": "cyan",
+      "2": "bold_white"
+    }
   },
 
   "modules": [
     {
-      "type": "title",
+      "type": "title"
     },
     {
       "type": "custom",

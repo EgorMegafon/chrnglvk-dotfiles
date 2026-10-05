@@ -65,3 +65,6 @@ bindings = [
   { key = "Key0",    mods = "Control",       action = "ResetFontSize"    },
   { key = "Enter",   mods = "Shift",         chars = "\u001b\r" },
 ]
+
+[font]
+offset = { x = 0, y = 0 }

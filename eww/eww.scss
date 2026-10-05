@@ -599,7 +599,7 @@
 
     border-radius: 20px;
 }
-.wallpaper-scroll {
+.scroll {
     -GtkScrolledWindow-scrollbar-spacing: 0;
     undershoot.top, undershoot.bottom { background: none; }
     overshoot.top, overshoot.bottom   { background: none; }
@@ -618,5 +618,46 @@
             background: none;
             border: none;
         }
+    }
+}
+
+
+// ========== TIME MENU ==========
+.time-menu {
+    background-color: transparent;
+}
+.time-menu-calendar {
+    background-color: transparent;
+    color: $on-background;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 5px;
+
+    border: none;
+    box-shadow: none;
+
+    &.header {
+        color: $primary;
+        font-weight: 600;
+    }
+    &.button {
+        color: $outline;
+        &:hover { color: $primary; }
+    }
+
+    &.highlight {
+        color: $secondary;
+        font-weight: 600;
+    }
+
+    &:selected {
+        background-color: $primary;
+        color: $on-primary;
+        border-radius: 8px;
+        font-weight: 800;
+    }
+
+    &:indeterminate {
+        color: $outline-variant;
     }
 }

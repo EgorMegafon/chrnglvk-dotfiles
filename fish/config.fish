@@ -33,8 +33,8 @@ abbr -a ff fastfetch
 
 abbr -a ytd yt-dlp
 
-abbr -a pacman 'sudo pacman'
-
 abbr -a restarteww '~/.config/niri/scripts/restart-eww.sh'
 
 abbr -a --set-cursor cwp '~/.config/niri/scripts/change-wallpaper.sh ~/Pictures/Wallpapers/%'
+
+abbr -a setxcb 'env QT_QPA_PLATFORM=xcb'
